@@ -277,8 +277,9 @@ fi
 echo ""
 echo -e "${YELLOW}Next Steps:${NC}"
 echo ""
-echo -e "  1. ${CYAN}Add your API key to .env:${NC}"
+echo -e "  1. ${CYAN}Configure API keys (optional if using MCP):${NC}"
 echo -e "     ${BLUE}ANTHROPIC_API_KEY=sk-ant-your-key-here${NC}"
+echo -e "     ${CYAN}(Skip this step if connecting via Claude Code or MCP)${NC}"
 echo ""
 echo -e "  2. ${CYAN}Start the application:${NC}"
 echo -e "     ${BLUE}./start.sh${NC}"
@@ -286,9 +287,5 @@ echo ""
 echo -e "  3. ${CYAN}Open in your browser:${NC}"
 echo -e "     ${BLUE}http://localhost:3000${NC}"
 echo ""
-
-# Check if API key is configured
-if grep -q "ANTHROPIC_API_KEY=$" .env 2>/dev/null || grep -q "ANTHROPIC_API_KEY=your" .env 2>/dev/null; then
-    echo -e "${YELLOW}⚠ Remember: You must add your API key to .env before starting!${NC}"
-    echo ""
-fi
+echo -e "  ${CYAN}MCP Users:${NC} API keys not required - connect via Claude Code"
+echo ""

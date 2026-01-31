@@ -32,7 +32,11 @@ See [INSTALL.md](INSTALL.md) for detailed installation instructions.
 
 - Python 3.11+
 - Node.js 18+
-- API key (Anthropic or OpenAI)
+- API key (Anthropic or OpenAI) - *optional if using MCP*
+
+## MCP Integration
+
+This platform includes an MCP server for integration with Claude Code and other MCP clients. When connected via MCP, API keys are not required - the MCP client provides AI capabilities directly.
 
 ## License
 

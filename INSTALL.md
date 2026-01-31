@@ -15,9 +15,10 @@ A workshop-ready platform where up to 5 AI personas can collaborate on problems 
   - Required for: Local Ollama models, code sandbox execution
 - **Ollama** - [Download](https://ollama.ai) (alternative to Docker for local models)
 
-### API Keys (at least one required)
+### API Keys (optional if using MCP)
 - [Anthropic API Key](https://console.anthropic.com/) - For Claude models
-- [OpenAI API Key](https://platform.openai.com/) - For GPT models (optional)
+- [OpenAI API Key](https://platform.openai.com/) - For GPT models
+- **Note:** API keys are not required if connecting via MCP (Model Context Protocol)
 
 ## Quick Start
 
@@ -30,14 +31,16 @@ cd mastermind
 chmod +x install.sh
 ./install.sh
 
-# Add your API key to .env
-echo "ANTHROPIC_API_KEY=your_key_here" >> .env
+# Optional: Add API key (not needed if using MCP)
+# echo "ANTHROPIC_API_KEY=your_key_here" >> .env
 
 # Start the application
 ./start.sh
 ```
 
 Then open **http://localhost:3000** in your browser.
+
+> **MCP Users:** If connecting via Claude Code or another MCP client, API keys are not required. The MCP server provides AI capabilities directly.
 
 ---
 
@@ -236,7 +239,7 @@ mastermind/
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `ANTHROPIC_API_KEY` | Yes* | - | Anthropic API key for Claude |
+| `ANTHROPIC_API_KEY` | No* | - | Anthropic API key for Claude |
 | `OPENAI_API_KEY` | No | - | OpenAI API key for GPT models |
 | `OLLAMA_BASE_URL` | No | `http://localhost:11434` | Ollama server URL |
 | `DATABASE_URL` | No | `sqlite:///./data/collab.db` | Database connection |
@@ -245,7 +248,7 @@ mastermind/
 | `DEBUG` | No | `true` | Enable debug mode |
 | `MAX_PERSONAS_PER_SESSION` | No | `5` | Max personas per session |
 
-*At least one API key (Anthropic or OpenAI) is required.
+*API keys are optional when connecting via MCP. Otherwise, at least one API key is required.
 
 ---
 
