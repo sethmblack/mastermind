@@ -1,0 +1,33 @@
+# FastAPI and server
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+python-multipart>=0.0.18
+websockets>=14.0
+
+# Database
+sqlalchemy>=2.0.36
+aiosqlite>=0.20.0
+
+# AI Providers
+anthropic>=0.42.0
+openai>=1.59.0
+httpx>=0.28.0
+
+# Utilities
+pydantic>=2.10.0
+pydantic-settings>=2.7.0
+python-dotenv>=1.0.1
+tiktoken>=0.8.0
+pyyaml>=6.0.2
+markdown>=3.7
+
+# Async support
+aiofiles>=24.1.0
+greenlet>=3.0.0
+
+# Rate limiting
+slowapi>=0.1.9
+
+# Testing
+pytest>=8.3.0
+pytest-asyncio>=0.25.0
