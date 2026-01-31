@@ -38,6 +38,18 @@ See [INSTALL.md](INSTALL.md) for detailed installation instructions.
 
 This platform includes an MCP server for integration with Claude Code and other MCP clients. When connected via MCP, API keys are not required - the MCP client provides AI capabilities directly.
 
+### Quick Install with Claude Code
+
+If you're using Claude Code, simply run:
+```
+/install-mastermind
+```
+
+This skill will guide you through installation, or if already installed, offer options to:
+- **Reinstall** - Fresh installation
+- **Update Personas** - Pull latest from AI-Personas repo
+- **Doctor** - Diagnose and fix issues
+
 ## License
 
 MIT
