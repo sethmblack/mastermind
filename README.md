@@ -17,7 +17,7 @@ A multi-agent AI collaboration platform where up to 5 personas can discuss probl
 **One command to install everything:**
 
 ```bash
-claude -p "Clone https://github.com/sethmblack/mastermind.git and https://github.com/sethmblack/AI-Personas.git to ~/Documents, then run ./install.sh --personas-path ~/Documents/AI-Personas and ./start.sh"
+claude -p "Clone https://github.com/sethmblack/mastermind.git and https://github.com/sethmblack/AI-Personas.git to the current directory, then run ./install.sh --personas-path ../AI-Personas and ./start.sh"
 ```
 
 That's it. Claude Code will:
