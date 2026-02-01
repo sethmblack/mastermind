@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { statusLabels } from '@/lib/utils';
-import { Play, Pause, StopCircle, RotateCcw } from 'lucide-react';
+import { Play, Pause, StopCircle } from 'lucide-react';
 import { wsClient } from '@/lib/websocket';
 import { useState } from 'react';
 
 export function SessionControls() {
-  const { currentSession, isDiscussionActive, setCurrentSession } = useStore();
+  const { currentSession, isDiscussionActive, setCurrentSession, setDiscussionActive } = useStore();
   const [isEditing, setIsEditing] = useState(false);
   const [problemStatement, setProblemStatement] = useState(
     currentSession?.problem_statement || ''
@@ -19,18 +19,17 @@ export function SessionControls() {
 
   const handleStartDiscussion = () => {
     wsClient.startDiscussion();
+    setDiscussionActive(true);
   };
 
   const handlePauseDiscussion = () => {
     wsClient.pauseDiscussion();
-  };
-
-  const handleResumeDiscussion = () => {
-    wsClient.resumeDiscussion();
+    setDiscussionActive(false);
   };
 
   const handleStopDiscussion = () => {
     wsClient.stopDiscussion();
+    setDiscussionActive(false);
   };
 
   const handleUpdateProblem = async () => {

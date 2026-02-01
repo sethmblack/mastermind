@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import type {
   Session,
-  SessionPersona,
   Message,
   PersonaSummary,
   SessionPhase,
@@ -12,6 +11,27 @@ interface StreamingMessage {
   persona_name: string;
   content: string;
   isComplete: boolean;
+}
+
+interface OrchestratorStatus {
+  status: string;  // "checking", "generating", "submitting", "waiting", "complete", "idle"
+  persona_name?: string;
+  round_number?: number;
+  details?: string;
+  timestamp: string;
+  // Token usage from Claude Code
+  input_tokens?: number;
+  output_tokens?: number;
+  cache_read_tokens?: number;
+  cache_creation_tokens?: number;
+}
+
+interface OrchestratorTokenUsage {
+  input_tokens: number;
+  output_tokens: number;
+  cache_read_tokens: number;
+  cache_creation_tokens: number;
+  total_tokens: number;
 }
 
 interface AppState {
@@ -54,6 +74,14 @@ interface AppState {
   removeSelectedPersona: (personaName: string) => void;
   clearSelectedPersonas: () => void;
 
+  // Orchestrator status
+  orchestratorStatus: OrchestratorStatus | null;
+  setOrchestratorStatus: (status: OrchestratorStatus | null) => void;
+
+  // Orchestrator token usage (cumulative)
+  orchestratorTokenUsage: OrchestratorTokenUsage;
+  updateOrchestratorTokenUsage: (tokens: Partial<OrchestratorTokenUsage>) => void;
+
   // UI state
   leftSidebarOpen: boolean;
   rightSidebarOpen: boolean;
@@ -73,7 +101,7 @@ const initialTokenUsage: TokenUsage = {
   cost: 0,
 };
 
-export const useStore = create<AppState>((set, get) => ({
+export const useStore = create<AppState>((set) => ({
   // Session state
   currentSession: null,
   setCurrentSession: (session) => set({ currentSession: session }),
@@ -107,7 +135,7 @@ export const useStore = create<AppState>((set, get) => ({
       }
       return { streamingMessages: newMap };
     }),
-  completeStreaming: (personaName, fullContent) =>
+  completeStreaming: (personaName, _fullContent) =>
     set((state) => {
       const newMap = new Map(state.streamingMessages);
       newMap.delete(personaName);
@@ -184,6 +212,31 @@ export const useStore = create<AppState>((set, get) => ({
     })),
   clearSelectedPersonas: () => set({ selectedPersonas: [] }),
 
+  // Orchestrator status
+  orchestratorStatus: null,
+  setOrchestratorStatus: (status) => set({ orchestratorStatus: status }),
+
+  // Orchestrator token usage (cumulative from Claude Code)
+  orchestratorTokenUsage: {
+    input_tokens: 0,
+    output_tokens: 0,
+    cache_read_tokens: 0,
+    cache_creation_tokens: 0,
+    total_tokens: 0,
+  },
+  updateOrchestratorTokenUsage: (tokens) =>
+    set((state) => {
+      const updated = {
+        input_tokens: state.orchestratorTokenUsage.input_tokens + (tokens.input_tokens || 0),
+        output_tokens: state.orchestratorTokenUsage.output_tokens + (tokens.output_tokens || 0),
+        cache_read_tokens: state.orchestratorTokenUsage.cache_read_tokens + (tokens.cache_read_tokens || 0),
+        cache_creation_tokens: state.orchestratorTokenUsage.cache_creation_tokens + (tokens.cache_creation_tokens || 0),
+        total_tokens: 0,
+      };
+      updated.total_tokens = updated.input_tokens + updated.output_tokens + updated.cache_read_tokens + updated.cache_creation_tokens;
+      return { orchestratorTokenUsage: updated };
+    }),
+
   // UI state
   leftSidebarOpen: true,
   rightSidebarOpen: true,
@@ -204,5 +257,13 @@ export const useStore = create<AppState>((set, get) => ({
       totalTokenUsage: { ...initialTokenUsage },
       isDiscussionActive: false,
       selectedPersonas: [],
+      orchestratorStatus: null,
+      orchestratorTokenUsage: {
+        input_tokens: 0,
+        output_tokens: 0,
+        cache_read_tokens: 0,
+        cache_creation_tokens: 0,
+        total_tokens: 0,
+      },
     }),
 }));

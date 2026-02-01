@@ -1,9 +1,8 @@
-import { useRef, useMemo } from 'react';
+import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { personasApi } from '@/lib/api';
 import { AgentCard } from './AgentCard';
-import type { PersonaSummary } from '@/types';
 import { Loader2 } from 'lucide-react';
 
 interface AgentListProps {
@@ -28,8 +27,8 @@ export function AgentList({ searchQuery, selectedDomain }: AgentListProps) {
   const rowVirtualizer = useVirtualizer({
     count: personas.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 80, // Estimated row height
-    overscan: 5,
+    estimateSize: () => 32, // Compact row height
+    overscan: 10,
   });
 
   if (isLoading) {

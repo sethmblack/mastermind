@@ -3,8 +3,6 @@ import { useStore } from '@/store';
 import { AgentList } from '@/components/agents/AgentList';
 import { AgentSearch } from '@/components/agents/AgentSearch';
 import { SelectedAgents } from '@/components/agents/SelectedAgents';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, Plus } from 'lucide-react';
@@ -13,7 +11,6 @@ export function RightSidebar() {
   const { selectedPersonas, currentSession } = useStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
-  const [newSessionModalOpen, setNewSessionModalOpen] = useState(false);
 
   const showCreateButton = selectedPersonas.length > 0 && !currentSession;
 
@@ -59,12 +56,12 @@ export function RightSidebar() {
       )}
 
       {/* Agent List */}
-      <ScrollArea className="flex-1">
+      <div className="flex-1 overflow-hidden">
         <AgentList
           searchQuery={searchQuery}
           selectedDomain={selectedDomain}
         />
-      </ScrollArea>
+      </div>
     </div>
   );
 }

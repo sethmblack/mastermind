@@ -7,13 +7,16 @@ import { ChatArea } from '@/components/chat/ChatArea';
 import { SettingsModal } from '@/components/modals/SettingsModal';
 import { NewSessionModal } from '@/components/modals/NewSessionModal';
 import { useStore } from '@/store';
-import { personasApi } from '@/lib/api';
+import { personasApi, sessionsApi } from '@/lib/api';
 import { wsClient } from '@/lib/websocket';
 import type { WSEvent } from '@/types';
+
+const SESSION_STORAGE_KEY = 'multi-agent-collab-session-id';
 
 function App() {
   const {
     currentSession,
+    setCurrentSession,
     setMessages,
     addMessage,
     startStreaming,
@@ -23,6 +26,8 @@ function App() {
     updateTokenUsage,
     updateSessionPhase,
     setDiscussionActive,
+    setOrchestratorStatus,
+    updateOrchestratorTokenUsage,
   } = useStore();
 
   // Prefetch personas count
@@ -30,6 +35,33 @@ function App() {
     queryKey: ['personas', 'count'],
     queryFn: personasApi.getCount,
   });
+
+  // Restore session from localStorage on mount
+  useEffect(() => {
+    const savedSessionId = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (savedSessionId && !currentSession) {
+      const sessionId = parseInt(savedSessionId, 10);
+      if (!isNaN(sessionId)) {
+        sessionsApi.get(sessionId)
+          .then((session) => {
+            setCurrentSession(session);
+            // Load messages for the session
+            sessionsApi.getMessages(sessionId).then(setMessages).catch(console.error);
+          })
+          .catch((e) => {
+            console.error('Failed to restore session:', e);
+            localStorage.removeItem(SESSION_STORAGE_KEY);
+          });
+      }
+    }
+  }, []);
+
+  // Save session ID to localStorage when it changes
+  useEffect(() => {
+    if (currentSession) {
+      localStorage.setItem(SESSION_STORAGE_KEY, currentSession.id.toString());
+    }
+  }, [currentSession?.id]);
 
   // WebSocket event handling
   useEffect(() => {
@@ -73,7 +105,8 @@ function App() {
             persona_name: event.data.persona_name as string,
             role: 'assistant',
             content: event.data.content as string,
-            turn_number: 0,
+            turn_number: (event.data.turn_number as number) || 1,
+            round_number: (event.data.round_number as number) || 1,
             metadata: {},
             created_at: event.timestamp,
           });
@@ -92,6 +125,29 @@ function App() {
 
         case 'token_update':
           // Additional token updates
+          break;
+
+        case 'orchestrator_status':
+          setOrchestratorStatus({
+            status: event.data.status as string,
+            persona_name: event.data.persona_name as string | undefined,
+            round_number: event.data.round_number as number | undefined,
+            details: event.data.details as string | undefined,
+            timestamp: event.timestamp,
+            input_tokens: event.data.input_tokens as number | undefined,
+            output_tokens: event.data.output_tokens as number | undefined,
+            cache_read_tokens: event.data.cache_read_tokens as number | undefined,
+            cache_creation_tokens: event.data.cache_creation_tokens as number | undefined,
+          });
+          // Update cumulative orchestrator token usage
+          if (event.data.input_tokens || event.data.output_tokens || event.data.cache_read_tokens || event.data.cache_creation_tokens) {
+            updateOrchestratorTokenUsage({
+              input_tokens: event.data.input_tokens as number | undefined,
+              output_tokens: event.data.output_tokens as number | undefined,
+              cache_read_tokens: event.data.cache_read_tokens as number | undefined,
+              cache_creation_tokens: event.data.cache_creation_tokens as number | undefined,
+            });
+          }
           break;
 
         case 'error':

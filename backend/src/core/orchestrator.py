@@ -41,6 +41,7 @@ class OrchestratorState(str, Enum):
     PAUSED = "paused"
     STOPPED = "stopped"
     VOTING = "voting"
+    AWAITING_MCP = "awaiting_mcp"  # Waiting for Claude Code to provide responses
 
 
 @dataclass
@@ -72,6 +73,10 @@ class Orchestrator:
         self.current_turn = 0
         self._lock = asyncio.Lock()
         self._initialized = False
+        # MCP/Claude Code mode tracking
+        self._mcp_mode = False
+        self._pending_mcp_responses: Dict[str, bool] = {}  # persona_name -> awaiting response
+        self._mcp_response_events: Dict[str, asyncio.Event] = {}  # For async waiting
 
     async def initialize(self):
         """Initialize the orchestrator with session data."""
@@ -89,6 +94,7 @@ class Orchestrator:
 
             self.session = session
             self.config = session.config or {}
+            self._mcp_mode = self.config.get("mcp_mode", False)
 
             # Load session personas
             personas_result = await db.execute(
@@ -239,6 +245,11 @@ class Orchestrator:
         await send_turn_start(self.session_id, persona_name, turn_number)
         await send_persona_thinking(self.session_id, persona_name)
 
+        # Check if MCP mode is enabled - wait for Claude Code to provide response
+        if self._mcp_mode:
+            await self._await_mcp_response(persona_name, turn_number)
+            return
+
         try:
             # Build system prompt
             context_builder = ContextBuilder(model=sp.model)
@@ -349,6 +360,55 @@ class Orchestrator:
                 type=WSEventType.PERSONA_ERROR,
                 data={"persona_name": persona_name, "error": str(e)},
             ))
+
+    async def _await_mcp_response(self, persona_name: str, turn_number: int):
+        """Mark persona as awaiting MCP response from Claude Code."""
+        self._pending_mcp_responses[persona_name] = True
+        self._mcp_response_events[persona_name] = asyncio.Event()
+
+        # Broadcast that this persona is awaiting a response from Claude Code
+        await ws_manager.broadcast(self.session_id, WSEvent(
+            type=WSEventType.PERSONA_AWAITING_MCP,
+            data={
+                "persona_name": persona_name,
+                "turn_number": turn_number,
+                "message": f"Waiting for Claude Code to generate response as {persona_name}",
+            },
+        ))
+
+        logger.info(f"Persona {persona_name} awaiting MCP response for session {self.session_id}")
+
+    def get_pending_mcp_responses(self) -> List[str]:
+        """Get list of personas awaiting MCP responses."""
+        return [name for name, pending in self._pending_mcp_responses.items() if pending]
+
+    async def receive_mcp_response(self, persona_name: str, content: str):
+        """Receive a response from Claude Code via MCP."""
+        if persona_name not in self._pending_mcp_responses:
+            logger.warning(f"Unexpected MCP response for {persona_name}")
+            return False
+
+        # Clear pending status
+        self._pending_mcp_responses[persona_name] = False
+
+        # Signal the event if anyone is waiting
+        if persona_name in self._mcp_response_events:
+            self._mcp_response_events[persona_name].set()
+
+        # Notify turn end
+        await send_turn_end(self.session_id, persona_name, self.current_turn)
+
+        # Update turn manager
+        if self.turn_manager:
+            self.turn_manager.mark_speaker_done(persona_name)
+
+        logger.info(f"Received MCP response for {persona_name} in session {self.session_id}")
+        return True
+
+    def set_mcp_mode(self, enabled: bool):
+        """Enable or disable MCP mode."""
+        self._mcp_mode = enabled
+        logger.info(f"MCP mode {'enabled' if enabled else 'disabled'} for session {self.session_id}")
 
     async def _get_conversation_history(self) -> List[Message]:
         """Get conversation history for the session."""

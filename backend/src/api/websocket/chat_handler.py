@@ -44,6 +44,14 @@ class WSEventType(str, Enum):
     PERSONA_CHUNK = "persona_chunk"
     PERSONA_DONE = "persona_done"
     PERSONA_ERROR = "persona_error"
+    PERSONA_AWAITING_MCP = "persona_awaiting_mcp"  # Waiting for Claude Code
+
+    # MCP events
+    SET_MCP_MODE = "set_mcp_mode"
+    MCP_STATUS = "mcp_status"
+
+    # Orchestrator events (status updates from Claude Code)
+    ORCHESTRATOR_STATUS = "orchestrator_status"
 
     # Turn events
     TURN_START = "turn_start"
@@ -240,6 +248,33 @@ async def handle_event(
                 orchestrator = get_orchestrator(session_id)
                 await orchestrator.request_vote(proposal)
 
+        elif event_type == WSEventType.SET_MCP_MODE.value:
+            # Toggle MCP mode (Claude Code powers the responses)
+            enabled = event_data.get("enabled", False)
+            orchestrator = get_orchestrator(session_id)
+            orchestrator.set_mcp_mode(enabled)
+
+            # Also update session config in database
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(
+                    select(Session).where(Session.id == session_id)
+                )
+                session = result.scalar_one_or_none()
+                if session:
+                    config = session.config or {}
+                    config["mcp_mode"] = enabled
+                    session.config = config
+                    await db.commit()
+
+            # Broadcast MCP status
+            await manager.broadcast(session_id, WSEvent(
+                type=WSEventType.MCP_STATUS,
+                data={
+                    "enabled": enabled,
+                    "pending_responses": orchestrator.get_pending_mcp_responses(),
+                },
+            ))
+
         else:
             await manager.send_personal(websocket, WSEvent(
                 type=WSEventType.ERROR,
@@ -370,6 +405,8 @@ async def send_persona_done(
     full_content: str,
     input_tokens: int,
     output_tokens: int,
+    turn_number: int = 0,
+    round_number: int = 1,
 ):
     """Notify that a persona finished speaking."""
     await manager.broadcast(session_id, WSEvent(
@@ -379,6 +416,8 @@ async def send_persona_done(
             "content": full_content,
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
+            "turn_number": turn_number,
+            "round_number": round_number,
         },
     ))
 
@@ -404,4 +443,51 @@ async def send_turn_end(session_id: int, persona_name: str, turn_number: int):
     await manager.broadcast(session_id, WSEvent(
         type=WSEventType.TURN_END,
         data={"persona_name": persona_name, "turn_number": turn_number},
+    ))
+
+
+async def send_orchestrator_status(
+    session_id: int,
+    status: str,
+    persona_name: str = None,
+    round_number: int = None,
+    details: str = None,
+    input_tokens: int = None,
+    output_tokens: int = None,
+    cache_read_tokens: int = None,
+    cache_creation_tokens: int = None,
+):
+    """
+    Send orchestrator status update to the frontend.
+
+    Args:
+        session_id: The session to broadcast to
+        status: Status type (e.g., "checking", "generating", "submitting", "waiting", "complete")
+        persona_name: Which persona is being processed (if applicable)
+        round_number: Current discussion round (if applicable)
+        details: Additional details about the status
+        input_tokens: Claude Code input tokens used
+        output_tokens: Claude Code output tokens used
+        cache_read_tokens: Tokens read from cache
+        cache_creation_tokens: Tokens used to create cache
+    """
+    data = {"status": status}
+    if persona_name:
+        data["persona_name"] = persona_name
+    if round_number:
+        data["round_number"] = round_number
+    if details:
+        data["details"] = details
+    if input_tokens is not None:
+        data["input_tokens"] = input_tokens
+    if output_tokens is not None:
+        data["output_tokens"] = output_tokens
+    if cache_read_tokens is not None:
+        data["cache_read_tokens"] = cache_read_tokens
+    if cache_creation_tokens is not None:
+        data["cache_creation_tokens"] = cache_creation_tokens
+
+    await manager.broadcast(session_id, WSEvent(
+        type=WSEventType.ORCHESTRATOR_STATUS,
+        data=data,
     ))

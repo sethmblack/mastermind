@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { analyticsApi } from '@/lib/api';
-import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 
 interface ConsensusGaugeProps {

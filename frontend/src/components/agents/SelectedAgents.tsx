@@ -1,7 +1,7 @@
 import { useStore } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, User } from 'lucide-react';
+import { X } from 'lucide-react';
 import { getPersonaColor } from '@/lib/utils';
 
 export function SelectedAgents() {

@@ -21,6 +21,7 @@ class WebSocketClient {
       this.disconnect();
       this.sessionId = sessionId;
 
+      // Use Vite proxy for WebSocket (proxied to backend port 8000)
       const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/chat/${sessionId}`;
       this.ws = new WebSocket(wsUrl);
 

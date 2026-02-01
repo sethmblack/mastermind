@@ -1,1 +1,1 @@
-# Multi-Agent Collaboration Platform - Backend
+# Mastermind - Multi-Agent Collaboration Platform - Backend

@@ -41,31 +41,56 @@ curl -s http://localhost:8000/health 2>/dev/null
 
 ## Fresh Installation
 
-### 1. Choose Installation Directory
+### 1. Check for AI-Personas Repository
 
-Ask the user where to install using AskUserQuestion:
+First, check if the user has the AI-Personas repository:
+
+```bash
+# Check common locations
+ls -la ~/Documents/AI-Personas/experts 2>/dev/null || \
+ls -la ~/AI-Personas/experts 2>/dev/null || \
+ls -la ~/Projects/AI-Personas/experts 2>/dev/null
+```
+
+If NOT found, ask the user using AskUserQuestion:
+- **Clone AI-Personas** - Clone to ~/Documents/AI-Personas
+- **I have it elsewhere** - Let them specify the path
+
+If cloning is needed:
+```bash
+git clone https://github.com/sethmblack/AI-Personas.git ~/Documents/AI-Personas
+```
+
+### 2. Choose Installation Directory
+
+Ask the user where to install Mastermind using AskUserQuestion:
 - `~/mastermind` (Recommended)
 - `~/Projects/mastermind`
 - Current directory
 - Other (let them specify)
 
-### 2. Clone Repository
+### 3. Clone Repository
 
 ```bash
 git clone https://github.com/sethmblack/mastermind.git <chosen-directory>
 cd <chosen-directory>
 ```
 
-### 3. Run Install Script
+### 4. Run Install Script
 
 ```bash
 chmod +x install.sh
-./install.sh
+./install.sh --personas-path <path-to-AI-Personas>
+```
+
+Example:
+```bash
+./install.sh --personas-path ~/Documents/AI-Personas
 ```
 
 This will:
 - Check prerequisites (Python 3.11+, Node.js 18+, Git)
-- Clone the AI-Personas repository
+- Configure the path to the existing AI-Personas repository
 - Set up Python virtual environment
 - Install all dependencies
 
@@ -150,10 +175,17 @@ rm -rf frontend/node_modules backend/venv
 
 If the user chooses to update personas:
 
+First, get the personas path from .env:
 ```bash
-cd personas
+PERSONAS_PATH=$(grep PERSONAS_PATH .env | head -1 | cut -d'=' -f2 | sed 's|/experts||')
+echo "AI-Personas location: $PERSONAS_PATH"
+```
+
+Then update:
+```bash
+cd "$PERSONAS_PATH"
 git pull origin main
-cd ..
+cd -
 ```
 
 Then verify:
@@ -184,9 +216,14 @@ git --version
 ```bash
 echo "=== Directory Structure ==="
 ls -la
-ls -la personas/experts 2>/dev/null | head -5
 ls -la backend/venv 2>/dev/null
 ls -la frontend/node_modules 2>/dev/null | head -5
+
+# Check personas path from .env
+PERSONAS_PATH=$(grep PERSONAS_PATH .env | head -1 | cut -d'=' -f2 | sed 's|/experts||')
+echo "=== AI-Personas Location ==="
+echo "Configured path: $PERSONAS_PATH"
+ls -la "$PERSONAS_PATH/experts" 2>/dev/null | head -5 || echo "NOT FOUND"
 ```
 
 ### 3. Check Environment
@@ -237,9 +274,13 @@ cd backend && python3 -m venv venv && source venv/bin/activate && pip install -r
 cd frontend && npm install
 ```
 
-**Missing personas:**
+**Missing or invalid personas path:**
 ```bash
-git clone https://github.com/sethmblack/AI-Personas.git personas
+# Clone AI-Personas to a standard location (NOT inside the app)
+git clone https://github.com/sethmblack/AI-Personas.git ~/Documents/AI-Personas
+
+# Then re-run install with the correct path
+./install.sh --personas-path ~/Documents/AI-Personas
 ```
 
 **Missing .env:**

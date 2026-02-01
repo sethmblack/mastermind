@@ -37,8 +37,11 @@ class SessionConfig(BaseModel):
     blind_spot_detection: bool = False
     time_box_minutes: Optional[int] = None
     max_turns: Optional[int] = None
+    min_rounds: int = 3  # Minimum discussion rounds
+    max_rounds: int = 3  # Maximum discussion rounds (can be same as min for fixed)
     web_search_enabled: bool = False
     code_execution_enabled: bool = False
+    mcp_mode: bool = False  # Use Claude Code to power responses via MCP
 
 
 class CreateSessionRequest(BaseModel):
@@ -114,6 +117,7 @@ class MessageResponse(BaseModel):
     role: str
     content: str
     turn_number: int
+    round_number: Optional[int] = 1  # Discussion round within a turn
     phase: Optional[SessionPhase]
     extra_data: dict
     created_at: datetime
@@ -152,6 +156,20 @@ async def create_session(
             color=persona_config.color or colors[i % len(colors)],
         )
         db.add(session_persona)
+
+    # AUTO-START: If problem_statement provided, create it as the first user message
+    # This kicks off the discussion immediately
+    if request.problem_statement:
+        first_message = Message(
+            session_id=session.id,
+            persona_name=None,  # User message
+            role="user",
+            content=request.problem_statement,
+            turn_number=1,
+            round_number=1,
+            phase=session.phase,
+        )
+        db.add(first_message)
 
     await db.commit()
     await db.refresh(session)

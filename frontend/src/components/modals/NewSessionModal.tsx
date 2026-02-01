@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { turnModeLabels, getPersonaColor } from '@/lib/utils';
+import { turnModeLabels, turnModeDescriptions, getPersonaColor } from '@/lib/utils';
 import type { TurnMode, PersonaConfig } from '@/types';
 import { Loader2, X } from 'lucide-react';
 
@@ -129,8 +129,13 @@ export function NewSessionModal() {
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(turnModeLabels).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
+                  <SelectItem key={value} value={value} className="py-3">
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium">{label}</span>
+                      <span className="text-xs text-muted-foreground mt-0.5 whitespace-normal">
+                        {turnModeDescriptions[value]}
+                      </span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>

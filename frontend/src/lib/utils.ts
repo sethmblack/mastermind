@@ -107,6 +107,14 @@ export const turnModeLabels: Record<string, string> = {
   parallel: 'Parallel',
 };
 
+export const turnModeDescriptions: Record<string, string> = {
+  round_robin: 'Each persona takes turns speaking in a fixed order. Ensures equal participation and structured discussion.',
+  moderator: 'One persona acts as moderator, directing the conversation and calling on others to speak.',
+  free_form: 'Personas can respond at any time based on relevance. More natural but may lead to dominant voices.',
+  interrupt: 'Personas can interrupt each other mid-thought. Creates dynamic debates but can be chaotic.',
+  parallel: 'All personas respond simultaneously to each prompt. Fastest but no inter-persona dialogue within rounds.',
+};
+
 export const statusLabels: Record<string, string> = {
   active: 'Active',
   paused: 'Paused',

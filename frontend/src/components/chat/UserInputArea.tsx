@@ -7,7 +7,7 @@ import { Send, Square } from 'lucide-react';
 
 export function UserInputArea() {
   const [message, setMessage] = useState('');
-  const { isDiscussionActive, thinkingPersonas } = useStore();
+  const { thinkingPersonas } = useStore();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isThinking = thinkingPersonas.size > 0;

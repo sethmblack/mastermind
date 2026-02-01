@@ -20,6 +20,7 @@ class PersonaSummary(BaseModel):
     """Summary of a persona for list views."""
     name: str
     display_name: str
+    description: Optional[str] = None  # Brief description for tooltip
     domain: Optional[str] = None
     era: Optional[str] = None
     voice_preview: Optional[str] = None
@@ -68,10 +69,26 @@ async def list_personas(
         personas = sorted(personas, key=lambda p: p.display_name)
         personas = personas[offset:offset + limit]
 
+    def get_description(p) -> Optional[str]:
+        """Get the biographical description for a persona."""
+        # Use the bio field if available (extracted from PROMPT.md)
+        if p.bio:
+            return p.bio
+
+        # Fallback to expertise summary
+        if p.expertise_summary:
+            # Get first sentence
+            first_sentence = p.expertise_summary.split('.')[0]
+            if len(first_sentence) > 20:
+                return first_sentence + '.'
+
+        return None
+
     return [
         PersonaSummary(
             name=p.name,
             display_name=p.display_name,
+            description=get_description(p),
             domain=p.domain,
             era=p.era,
             voice_preview=p.voice_profile[:200] if p.voice_profile else None,
@@ -93,14 +110,16 @@ async def list_domains():
     loader = get_persona_loader()
     domains = loader.get_all_domains()
 
-    return [
+    # Sort case-insensitively for better UX
+    domain_infos = [
         DomainInfo(
             name=domain,
             display_name=domain.replace("-", " ").title(),
             persona_count=len(loader.get_personas_by_domain(domain)),
         )
-        for domain in sorted(domains)
+        for domain in domains
     ]
+    return sorted(domain_infos, key=lambda d: d.display_name.lower())
 
 
 @router.get("/{persona_name}", response_model=PersonaDetail)

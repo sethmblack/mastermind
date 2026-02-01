@@ -17,7 +17,7 @@ export function WelcomeScreen() {
         <div className="flex items-center justify-center gap-3 mb-6">
           <Sparkles className="h-12 w-12 text-primary" />
           <h1 className="text-4xl font-bold gradient-text">
-            Multi-Agent Collaboration
+            Mastermind
           </h1>
         </div>
 

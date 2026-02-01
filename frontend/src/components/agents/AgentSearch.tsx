@@ -9,7 +9,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Search } from 'lucide-react';
-import { slugToTitle } from '@/lib/utils';
 
 interface AgentSearchProps {
   value: string;

@@ -1,8 +1,9 @@
 import { useStore } from '@/store';
 import { SessionControls } from '@/components/controls/SessionControls';
+import { SessionSelector } from '@/components/controls/SessionSelector';
 import { OrchestratorControls } from '@/components/controls/OrchestratorControls';
 import { BudgetMetrics } from '@/components/controls/BudgetMetrics';
-import { PhaseIndicator } from '@/components/controls/PhaseIndicator';
+import { RoundIndicator } from '@/components/controls/RoundIndicator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -23,7 +24,7 @@ export function LeftSidebar() {
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
             <h1 className="font-semibold text-lg gradient-text">
-              AI Collab
+              Mastermind
             </h1>
           </div>
           <Button
@@ -39,14 +40,24 @@ export function LeftSidebar() {
       {/* Content */}
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-6">
+          {/* Session Selector - Always visible */}
+          <section>
+            <h3 className="text-sm font-medium mb-3 text-muted-foreground">
+              Sessions
+            </h3>
+            <SessionSelector />
+          </section>
+
+          <Separator />
+
           {currentSession ? (
             <>
-              {/* Phase Indicator */}
+              {/* Round Indicator */}
               <section>
                 <h3 className="text-sm font-medium mb-3 text-muted-foreground">
-                  Session Phase
+                  Discussion Round
                 </h3>
-                <PhaseIndicator />
+                <RoundIndicator />
               </section>
 
               <Separator />

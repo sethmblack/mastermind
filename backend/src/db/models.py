@@ -121,7 +121,8 @@ class Message(Base):
     persona_name = Column(String(255), nullable=True)  # None for user/system messages
     role = Column(String(20), nullable=False)  # user, assistant, system
     content = Column(Text, nullable=False)
-    turn_number = Column(Integer, default=0)
+    turn_number = Column(Integer, default=0)  # Which user message this relates to
+    round_number = Column(Integer, default=1)  # Discussion round within a turn (1=initial, 2+=replies)
     phase = Column(SQLEnum(SessionPhase), nullable=True)
     extra_data = Column(JSON, default=dict)  # Additional data like citations, confidence
     created_at = Column(DateTime(timezone=True), server_default=func.now())

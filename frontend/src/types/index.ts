@@ -25,8 +25,11 @@ export interface SessionConfig {
   blind_spot_detection: boolean;
   time_box_minutes?: number;
   max_turns?: number;
+  min_rounds: number;  // Minimum discussion rounds (default 3)
+  max_rounds: number;  // Maximum discussion rounds (default 3)
   web_search_enabled: boolean;
   code_execution_enabled: boolean;
+  mcp_mode: boolean;  // Use Claude Code to power responses
 }
 
 export interface Session {
@@ -63,6 +66,7 @@ export interface PersonaSkill {
 export interface PersonaSummary {
   name: string;
   display_name: string;
+  description?: string;  // Brief description for tooltip
   domain?: string;
   era?: string;
   voice_preview?: string;
@@ -104,6 +108,7 @@ export interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
   turn_number: number;
+  round_number?: number;  // Discussion round within a turn (1=initial, 2+=replies)
   phase?: SessionPhase;
   metadata: Record<string, unknown>;
   created_at: string;
@@ -125,6 +130,7 @@ export type WSEventType =
   | 'persona_chunk'
   | 'persona_done'
   | 'persona_error'
+  | 'persona_awaiting_mcp'
   | 'turn_start'
   | 'turn_end'
   | 'speaker_queue'
@@ -134,7 +140,10 @@ export type WSEventType =
   | 'token_update'
   | 'budget_warning'
   | 'phase_change'
-  | 'session_update';
+  | 'session_update'
+  | 'set_mcp_mode'
+  | 'mcp_status'
+  | 'orchestrator_status';
 
 export interface WSEvent {
   type: WSEventType;

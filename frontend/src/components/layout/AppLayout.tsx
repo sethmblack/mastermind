@@ -28,13 +28,13 @@ export function AppLayout({ leftSidebar, rightSidebar, main }: AppLayoutProps) {
       {/* Left Sidebar */}
       <aside
         className={cn(
-          'h-full border-r border-border bg-card transition-all duration-300 ease-in-out',
-          leftSidebarOpen ? 'w-80' : 'w-0'
+          'h-full border-r border-border bg-card transition-all duration-300 ease-in-out flex-shrink-0',
+          leftSidebarOpen ? 'w-72 md:w-80 lg:w-96' : 'w-0'
         )}
       >
         <div
           className={cn(
-            'h-full w-80 overflow-hidden transition-opacity duration-300',
+            'h-full w-72 md:w-80 lg:w-96 overflow-hidden transition-opacity duration-300',
             leftSidebarOpen ? 'opacity-100' : 'opacity-0'
           )}
         >

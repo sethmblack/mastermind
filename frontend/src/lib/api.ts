@@ -47,7 +47,7 @@ async function fetchApi<T>(
 export const sessionsApi = {
   list: (status?: string, limit = 20, offset = 0) =>
     fetchApi<SessionSummary[]>(
-      `/sessions?limit=${limit}&offset=${offset}${status ? `&status=${status}` : ''}`
+      `/sessions/?limit=${limit}&offset=${offset}${status ? `&status=${status}` : ''}`
     ),
 
   get: (id: number) => fetchApi<Session>(`/sessions/${id}`),
@@ -59,7 +59,7 @@ export const sessionsApi = {
     turn_mode?: TurnMode;
     config?: Partial<SessionConfig>;
   }) =>
-    fetchApi<Session>('/sessions', {
+    fetchApi<Session>('/sessions/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -101,10 +101,10 @@ export const personasApi = {
     if (params?.limit) searchParams.set('limit', params.limit.toString());
     if (params?.offset) searchParams.set('offset', params.offset.toString());
     const query = searchParams.toString();
-    return fetchApi<PersonaSummary[]>(`/personas${query ? `?${query}` : ''}`);
+    return fetchApi<PersonaSummary[]>(`/personas/${query ? `?${query}` : ''}`);
   },
 
-  get: (name: string) => fetchApi<PersonaDetail>(`/personas/${name}`),
+  get: (name: string) => fetchApi<PersonaDetail>(`/personas/${encodeURIComponent(name)}`),
 
   getCount: () => fetchApi<{ count: number }>('/personas/count'),
 
@@ -116,7 +116,7 @@ export const personasApi = {
       display_name: string;
       full_prompt: string;
       system_prompt: string;
-    }>(`/personas/${name}/prompt`),
+    }>(`/personas/${encodeURIComponent(name)}/prompt`),
 };
 
 // Analytics API
@@ -177,6 +177,33 @@ export const analyticsApi = {
       scope_creep_instances: Array<{ content: string; importance: number }>;
       recommendations: string[];
     }>(`/analytics/sessions/${sessionId}/scope-check`),
+};
+
+// Config/MCP API
+export const configApi = {
+  getProviders: () => fetchApi<{
+    available_providers: string[];
+    models: Record<string, string[]>;
+  }>('/config/providers'),
+
+  setApiKey: (provider: string, apiKey: string) =>
+    fetchApi<{ status: string; provider: string; configured: boolean }>('/config/api-key', {
+      method: 'POST',
+      body: JSON.stringify({ provider, api_key: apiKey }),
+    }),
+
+  getMcpStatus: () => fetchApi<{
+    status: string;
+    tools_count?: number;
+    tools?: string[];
+    error?: string;
+  }>('/config/mcp/status'),
+
+  testMcp: () => fetchApi<{
+    status: string;
+    test_result?: { domains: Array<{ name: string; persona_count: number }> };
+    error?: string;
+  }>('/config/mcp/test', { method: 'GET' }),
 };
 
 export { ApiError };

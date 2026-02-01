@@ -1,4 +1,4 @@
-"""Configuration management for the Multi-Agent Collaboration Platform."""
+"""Configuration management for the Mastermind platform."""
 
 from pydantic_settings import BaseSettings
 from pydantic import Field
@@ -23,19 +23,19 @@ class Settings(BaseSettings):
         alias="DATABASE_URL"
     )
 
-    # Personas path - looks in project_root/personas/ (cloned AI-Personas repo)
+    # Personas path - points to the AI-Personas repo
     personas_path: Path = Field(
-        default=Path(__file__).parent.parent.parent / "personas" / "experts",
+        default=Path("/Users/ziggs/Documents/AI-Personas/experts"),
         alias="PERSONAS_PATH"
     )
 
     skills_path: Path = Field(
-        default=Path(__file__).parent.parent.parent / "personas" / "skills",
+        default=Path("/Users/ziggs/Documents/AI-Personas/skills"),
         alias="SKILLS_PATH"
     )
 
     domains_path: Path = Field(
-        default=Path(__file__).parent.parent.parent / "personas" / "domains",
+        default=Path("/Users/ziggs/Documents/AI-Personas/domains"),
         alias="DOMAINS_PATH"
     )
 

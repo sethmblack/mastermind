@@ -10,7 +10,7 @@ import uvicorn
 from .config import settings
 from .db.database import init_db
 from .personas.loader import get_persona_loader
-from .api.routes import sessions, personas, analytics
+from .api.routes import sessions, personas, analytics, config
 from .api.websocket import chat_handler
 
 # Configure logging
@@ -75,6 +75,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(sessions.router, prefix="/api/sessions", tags=["sessions"])
 app.include_router(personas.router, prefix="/api/personas", tags=["personas"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
+app.include_router(config.router, prefix="/api/config", tags=["config"])
 
 # WebSocket endpoint
 app.include_router(chat_handler.router, prefix="/ws", tags=["websocket"])

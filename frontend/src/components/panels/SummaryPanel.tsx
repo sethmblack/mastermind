@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { analyticsApi } from '@/lib/api';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import {
   Lightbulb,
   CheckCircle,
@@ -31,23 +30,6 @@ export function SummaryPanel({ sessionId }: SummaryPanelProps) {
   const disagreements = insights.filter(
     (i) => i.insight_type === 'disagreement'
   );
-
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'consensus':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'key_point':
-        return <Lightbulb className="h-4 w-4 text-yellow-500" />;
-      case 'action_item':
-        return <Target className="h-4 w-4 text-blue-500" />;
-      case 'question':
-        return <HelpCircle className="h-4 w-4 text-purple-500" />;
-      case 'disagreement':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
-      default:
-        return null;
-    }
-  };
 
   if (insights.length === 0) {
     return (

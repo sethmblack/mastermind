@@ -3,7 +3,8 @@ import { useStore } from '@/store';
 import { ConversationFlow } from './ConversationFlow';
 import { UserInputArea } from './UserInputArea';
 import { WelcomeScreen } from './WelcomeScreen';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { McpWaitingIndicator } from './McpWaitingIndicator';
+import { OrchestratorStatus } from './OrchestratorStatus';
 
 export function ChatArea() {
   const { currentSession, messages, streamingMessages } = useStore();
@@ -41,6 +42,9 @@ export function ChatArea() {
         )}
       </div>
 
+      {/* Orchestrator Status (shows when Claude Code is processing) */}
+      <OrchestratorStatus />
+
       {/* Messages */}
       <div
         ref={scrollRef}
@@ -49,6 +53,9 @@ export function ChatArea() {
       >
         <ConversationFlow />
       </div>
+
+      {/* MCP Waiting Indicator */}
+      <McpWaitingIndicator />
 
       {/* Input Area */}
       <UserInputArea />
