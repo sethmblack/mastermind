@@ -12,43 +12,48 @@ A multi-agent AI collaboration platform where up to 5 personas can discuss probl
 - **Rich Analytics** - Token usage, consensus tracking, conversation graphs
 - **Flexible Orchestration** - Round-robin, moderated, or free-form discussions
 
-## Quick Start
+## Quick Start with Claude Code
+
+**One command to install everything:**
 
 ```bash
-git clone https://github.com/sethmblack/mastermind.git
-cd mastermind
-./install.sh
-# Edit .env and add your ANTHROPIC_API_KEY
-./start.sh
+claude -p "Clone https://github.com/sethmblack/mastermind.git and https://github.com/sethmblack/AI-Personas.git to ~/Documents, then run ./install.sh --personas-path ~/Documents/AI-Personas and ./start.sh"
 ```
+
+That's it. Claude Code will:
+1. Clone both repositories
+2. Install all dependencies
+3. Configure personas
+4. Start the application
 
 Open http://localhost:3000
 
-## Documentation
+### Already have Claude Code running?
 
-See [INSTALL.md](INSTALL.md) for detailed installation instructions.
+```
+/install-mastermind
+```
+
+This skill guides you through installation, or if already installed, offers:
+- **Reinstall** - Fresh installation
+- **Update Personas** - Pull latest personas
+- **Doctor** - Diagnose and fix issues
+
+## Manual Installation
+
+```bash
+git clone https://github.com/sethmblack/mastermind.git
+git clone https://github.com/sethmblack/AI-Personas.git
+cd mastermind
+./install.sh --personas-path ../AI-Personas
+./start.sh
+```
 
 ## Requirements
 
 - Python 3.11+
 - Node.js 18+
-- API key (Anthropic or OpenAI) - *optional if using MCP*
-
-## MCP Integration
-
-This platform includes an MCP server for integration with Claude Code and other MCP clients. When connected via MCP, API keys are not required - the MCP client provides AI capabilities directly.
-
-### Quick Install with Claude Code
-
-If you're using Claude Code, simply run:
-```
-/install-mastermind
-```
-
-This skill will guide you through installation, or if already installed, offer options to:
-- **Reinstall** - Fresh installation
-- **Update Personas** - Pull latest from AI-Personas repo
-- **Doctor** - Diagnose and fix issues
+- Claude Code (recommended) or API key (Anthropic/OpenAI)
 
 ## License
 
