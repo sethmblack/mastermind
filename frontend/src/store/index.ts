@@ -225,12 +225,13 @@ export const useStore = create<AppState>((set) => ({
     total_tokens: 0,
   },
   updateOrchestratorTokenUsage: (tokens) =>
-    set((state) => {
+    set(() => {
+      // Set cumulative values directly (not adding)
       const updated = {
-        input_tokens: state.orchestratorTokenUsage.input_tokens + (tokens.input_tokens || 0),
-        output_tokens: state.orchestratorTokenUsage.output_tokens + (tokens.output_tokens || 0),
-        cache_read_tokens: state.orchestratorTokenUsage.cache_read_tokens + (tokens.cache_read_tokens || 0),
-        cache_creation_tokens: state.orchestratorTokenUsage.cache_creation_tokens + (tokens.cache_creation_tokens || 0),
+        input_tokens: tokens.input_tokens || 0,
+        output_tokens: tokens.output_tokens || 0,
+        cache_read_tokens: tokens.cache_read_tokens || 0,
+        cache_creation_tokens: tokens.cache_creation_tokens || 0,
         total_tokens: 0,
       };
       updated.total_tokens = updated.input_tokens + updated.output_tokens + updated.cache_read_tokens + updated.cache_creation_tokens;
