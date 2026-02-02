@@ -211,6 +211,26 @@ async def submit_mcp_response(request: SubmitResponseRequest):
         async with AsyncSessionLocal() as db:
             from ...db.models import PollVote
 
+            # VALIDATE: Check that persona belongs to this session
+            sp_result = await db.execute(
+                select(SessionPersona).where(
+                    SessionPersona.session_id == request.session_id,
+                    SessionPersona.persona_name == request.persona_name
+                )
+            )
+            session_persona = sp_result.scalar_one_or_none()
+            if not session_persona:
+                # Get actual session personas for error message
+                all_sp_result = await db.execute(
+                    select(SessionPersona).where(SessionPersona.session_id == request.session_id)
+                )
+                valid_personas = [sp.persona_name for sp in all_sp_result.scalars().all()]
+                return {
+                    "status": "error",
+                    "error": f"Persona '{request.persona_name}' is not part of session {request.session_id}",
+                    "valid_personas": valid_personas
+                }
+
             # Check for any active poll (synthesis or voting)
             poll_result = await db.execute(
                 select(Poll)

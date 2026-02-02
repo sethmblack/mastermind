@@ -477,11 +477,15 @@ class MCPServer:
             )
             from ...core.orchestrator import get_orchestrator
             import asyncio
+            import re
 
             session_id = arguments["session_id"]
             persona_name = arguments["persona_name"]
             content = arguments["content"]
             round_number = arguments.get("round_number", 1)
+
+            # Normalize persona name to internal format (lowercase with hyphens)
+            persona_name = re.sub(r'[^a-zA-Z0-9]+', '-', persona_name.lower()).strip('-')
 
             async with AsyncSessionLocal() as db:
                 # Get session
@@ -491,6 +495,25 @@ class MCPServer:
                 session = result.scalar_one_or_none()
                 if not session:
                     return {"error": "Session not found"}
+
+                # VALIDATE: Check that persona belongs to this session
+                sp_result = await db.execute(
+                    select(SessionPersona).where(
+                        SessionPersona.session_id == session_id,
+                        SessionPersona.persona_name == persona_name
+                    )
+                )
+                session_persona = sp_result.scalar_one_or_none()
+                if not session_persona:
+                    # Get actual session personas for error message
+                    all_sp_result = await db.execute(
+                        select(SessionPersona).where(SessionPersona.session_id == session_id)
+                    )
+                    valid_personas = [sp.persona_name for sp in all_sp_result.scalars().all()]
+                    return {
+                        "error": f"Persona '{persona_name}' is not part of session {session_id}",
+                        "valid_personas": valid_personas
+                    }
 
                 # Get current turn number (from last user message)
                 user_msg_result = await db.execute(
