@@ -302,7 +302,7 @@ echo ""
 # =============================================================================
 
 mkdir -p backend/data
-echo -e "${GREEN}✓${NC} Data directory ready (backend/data/)
+echo -e "${GREEN}✓${NC} Data directory ready (backend/data/)"
 
 echo ""
 
