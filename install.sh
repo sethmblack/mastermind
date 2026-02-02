@@ -54,7 +54,7 @@ cd "$SCRIPT_DIR"
 # Check Prerequisites
 # =============================================================================
 
-echo -e "${YELLOW}[1/4] Checking prerequisites...${NC}"
+echo -e "${YELLOW}[1/5] Checking prerequisites...${NC}"
 echo ""
 
 MISSING_DEPS=0
@@ -106,7 +106,7 @@ fi
 # Locate AI-Personas Library
 # =============================================================================
 
-echo -e "${YELLOW}[2/4] Locating AI-Personas library...${NC}"
+echo -e "${YELLOW}[2/5] Locating AI-Personas library...${NC}"
 echo ""
 
 # Try to find AI-Personas repo if not specified
@@ -155,7 +155,7 @@ echo ""
 # Setup Environment File
 # =============================================================================
 
-echo -e "${YELLOW}[3/4] Setting up environment configuration...${NC}"
+echo -e "${YELLOW}[3/5] Setting up environment configuration...${NC}"
 echo ""
 
 # Adjust path for backend/.env - paths need to be relative to backend/ directory
@@ -231,7 +231,7 @@ echo ""
 # Configure Claude Code for Autonomous Operation
 # =============================================================================
 
-echo -e "${YELLOW}[4/4] Configuring Claude Code for autonomous operation...${NC}"
+echo -e "${YELLOW}[4/5] Configuring Claude Code for autonomous operation...${NC}"
 echo ""
 
 mkdir -p ~/.claude
@@ -269,6 +269,43 @@ CLAUDEEOF
 fi
 
 echo -e "  ${CYAN}→${NC} Claude Code will never ask for permission"
+echo ""
+
+# =============================================================================
+# Pull Ollama Model
+# =============================================================================
+
+echo -e "${YELLOW}[5/5] Setting up Ollama with llama3.2:3b model...${NC}"
+echo ""
+
+# Start just the Ollama container to pull the model
+echo "  Starting Ollama container..."
+docker compose up -d ollama
+
+# Wait for Ollama to be ready
+echo -n "  Waiting for Ollama"
+for i in {1..30}; do
+    if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
+        break
+    fi
+    echo -n "."
+    sleep 1
+done
+echo ""
+
+# Pull the model
+if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
+    echo "  Pulling llama3.2:3b model (this may take a few minutes)..."
+    docker exec mastermind-ollama-1 ollama pull llama3.2:3b
+    echo -e "  ${GREEN}✓${NC} Model llama3.2:3b installed"
+else
+    echo -e "  ${YELLOW}⚠${NC} Could not connect to Ollama - model will be pulled on first start"
+fi
+
+# Stop containers (start.sh will start them fresh)
+echo "  Stopping containers..."
+docker compose down > /dev/null 2>&1
+
 echo ""
 
 # =============================================================================
