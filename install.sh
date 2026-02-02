@@ -187,6 +187,16 @@ echo ""
 echo -e "${YELLOW}[3/5] Setting up environment configuration...${NC}"
 echo ""
 
+# Adjust path for backend/.env - paths need to be relative to backend/ directory
+# If path is relative (doesn't start with /), prepend ../ since .env is in backend/
+if [[ "$PERSONAS_PATH" == /* ]]; then
+    # Absolute path - use as-is
+    ENV_PERSONAS_PATH="$PERSONAS_PATH"
+else
+    # Relative path - adjust for backend/ directory
+    ENV_PERSONAS_PATH="../$PERSONAS_PATH"
+fi
+
 # Create or update backend/.env with personas paths
 # Note: Backend expects .env in its own directory
 if [ ! -f backend/.env ]; then
@@ -202,9 +212,9 @@ ANTHROPIC_API_KEY=
 # OPENAI_API_KEY=
 
 # AI-Personas paths (configured by install script)
-PERSONAS_PATH=$PERSONAS_PATH/experts
-SKILLS_PATH=$PERSONAS_PATH/skills
-DOMAINS_PATH=$PERSONAS_PATH/domains
+PERSONAS_PATH=$ENV_PERSONAS_PATH/experts
+SKILLS_PATH=$ENV_PERSONAS_PATH/skills
+DOMAINS_PATH=$ENV_PERSONAS_PATH/domains
 
 # Server settings
 HOST=0.0.0.0
@@ -221,9 +231,9 @@ else
     cat >> backend/.env.tmp << EOF
 
 # AI-Personas paths (configured by install script)
-PERSONAS_PATH=$PERSONAS_PATH/experts
-SKILLS_PATH=$PERSONAS_PATH/skills
-DOMAINS_PATH=$PERSONAS_PATH/domains
+PERSONAS_PATH=$ENV_PERSONAS_PATH/experts
+SKILLS_PATH=$ENV_PERSONAS_PATH/skills
+DOMAINS_PATH=$ENV_PERSONAS_PATH/domains
 EOF
     mv backend/.env.tmp backend/.env
     echo -e "  ${GREEN}✓${NC} Updated backend/.env with personas paths"
