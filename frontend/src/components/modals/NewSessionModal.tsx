@@ -58,12 +58,12 @@ const providerModels: Record<Provider, { label: string; models: ModelInfo[]; def
   },
   ollama: {
     label: 'Ollama (Local)',
-    defaultModel: 'llama3.1:8b',
+    defaultModel: 'llama3.2:3b',
     models: [
-      { id: 'llama3.1:8b', label: 'Llama 3.1 8B' },
-      { id: 'llama3.1:70b', label: 'Llama 3.1 70B' },
+      { id: 'llama3.2:3b', label: 'Llama 3.2 3B (Default)' },
+      { id: 'llama3.2:1b', label: 'Llama 3.2 1B (Fastest)' },
       { id: 'mistral:7b', label: 'Mistral 7B' },
-      { id: 'qwen2:7b', label: 'Qwen2 7B' },
+      { id: 'gemma2:9b', label: 'Gemma2 9B' },
     ],
   },
   anthropic: {

@@ -174,7 +174,7 @@ docker-compose up -d ollama
 ### Pull a local model (after Ollama is running)
 
 ```bash
-docker exec -it mastermind-ollama ollama pull llama3.1
+docker exec -it mastermind-ollama-1 ollama pull llama3.2:3b
 ```
 
 ### Configure .env for local models
