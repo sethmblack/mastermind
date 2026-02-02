@@ -24,18 +24,19 @@ class Settings(BaseSettings):
     )
 
     # Personas path - points to the AI-Personas repo
+    # Default looks for AI-Personas as sibling directory or in common locations
     personas_path: Path = Field(
-        default=Path("/Users/ziggs/Documents/InfiniteBackroom/Demo/AI-Personas/experts"),
+        default=Path(os.environ.get("PERSONAS_PATH", "../AI-Personas/experts")),
         alias="PERSONAS_PATH"
     )
 
     skills_path: Path = Field(
-        default=Path("/Users/ziggs/Documents/InfiniteBackroom/Demo/AI-Personas/skills"),
+        default=Path(os.environ.get("SKILLS_PATH", "../AI-Personas/skills")),
         alias="SKILLS_PATH"
     )
 
     domains_path: Path = Field(
-        default=Path("/Users/ziggs/Documents/InfiniteBackroom/Demo/AI-Personas/domains"),
+        default=Path(os.environ.get("DOMAINS_PATH", "../AI-Personas/domains")),
         alias="DOMAINS_PATH"
     )
 

@@ -55,8 +55,8 @@ When the app is running with **MCP Mode enabled**, Claude Code generates all per
 **Before doing anything else when starting a new session, check for persona updates:**
 
 ```bash
-# Check if AI-Personas repo has updates
-cd /Users/ziggs/Documents/AI-Personas && git fetch && git status
+# Check if AI-Personas repo has updates (adjust path as needed)
+cd ../AI-Personas && git fetch && git status
 ```
 
 If there are updates available:
@@ -486,18 +486,20 @@ rm backend/data/collab.db
 Personas are loaded from an external repository (NOT inside this app):
 
 ```
-Default: /Users/ziggs/Documents/AI-Personas/
+Default: ../AI-Personas/ (sibling directory)
 ├── experts/    # 265+ persona definitions
 ├── skills/     # Shared skills
 └── domains/    # Domain groupings
 ```
 
-To change the path, edit `backend/src/config.py` or set environment variables:
+Paths are configured in `backend/.env`:
 ```
 PERSONAS_PATH=/path/to/AI-Personas/experts
 SKILLS_PATH=/path/to/AI-Personas/skills
 DOMAINS_PATH=/path/to/AI-Personas/domains
 ```
+
+The install script sets these automatically when you use `--personas-path`.
 
 ---
 

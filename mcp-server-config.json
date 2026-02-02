@@ -1,9 +1,9 @@
 {
   "mcpServers": {
-    "multi-agent-collab": {
+    "mastermind": {
       "command": "python3",
       "args": ["-m", "src.mcp_cli"],
-      "cwd": "/Users/ziggs/Documents/InfiniteBackroom/PromptLibrary/multi-agent-collab/backend",
+      "cwd": "/path/to/mastermind/backend",
       "env": {}
     }
   }

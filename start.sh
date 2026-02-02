@@ -22,15 +22,19 @@ echo -e "${BLUE}║     Multi-Agent Collaboration Platform - Starting...       �
 echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
-# Check if .env exists
-if [ ! -f .env ]; then
+# Check if .env exists (in backend/ or root)
+if [ -f backend/.env ]; then
+    ENV_FILE="backend/.env"
+elif [ -f .env ]; then
+    ENV_FILE=".env"
+else
     echo -e "${RED}Error: .env file not found${NC}"
-    echo "Please run ./install.sh first or copy .env.example to .env"
+    echo "Please run ./install.sh first"
     exit 1
 fi
 
 # Load environment variables
-export $(grep -v '^#' .env | xargs)
+export $(grep -v '^#' "$ENV_FILE" | xargs)
 
 # Function to cleanup on exit
 cleanup() {

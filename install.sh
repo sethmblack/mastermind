@@ -146,7 +146,7 @@ if [ -z "$PERSONAS_PATH" ]; then
         "$HOME/AI-Personas"
         "$HOME/Projects/AI-Personas"
         "$HOME/Code/AI-Personas"
-        "/Users/ziggs/Documents/AI-Personas"
+        "../AI-Personas"
     )
 
     for path in "${SEARCH_PATHS[@]}"; do
@@ -187,10 +187,11 @@ echo ""
 echo -e "${YELLOW}[3/5] Setting up environment configuration...${NC}"
 echo ""
 
-# Create or update .env with personas paths
-if [ ! -f .env ]; then
-    # Create new .env
-    cat > .env << EOF
+# Create or update backend/.env with personas paths
+# Note: Backend expects .env in its own directory
+if [ ! -f backend/.env ]; then
+    # Create new .env in backend directory
+    cat > backend/.env << EOF
 # Mastermind Configuration
 # Add your API key(s) below
 
@@ -210,23 +211,28 @@ HOST=0.0.0.0
 PORT=8000
 DEBUG=true
 EOF
-    echo -e "  ${GREEN}✓${NC} Created .env configuration"
+    echo -e "  ${GREEN}✓${NC} Created backend/.env configuration"
     echo -e "  ${CYAN}→${NC} Personas path: $PERSONAS_PATH"
-    echo -e "  ${YELLOW}⚠ Add your API key to .env (or use MCP)${NC}"
+    echo -e "  ${YELLOW}⚠ Add your API key to backend/.env (or use MCP)${NC}"
 else
-    # Update existing .env with personas paths
+    # Update existing backend/.env with personas paths
     # Remove old PERSONAS_PATH lines and add new ones
-    grep -v "PERSONAS_PATH\|SKILLS_PATH\|DOMAINS_PATH" .env > .env.tmp || true
-    cat >> .env.tmp << EOF
+    grep -v "PERSONAS_PATH\|SKILLS_PATH\|DOMAINS_PATH" backend/.env > backend/.env.tmp || true
+    cat >> backend/.env.tmp << EOF
 
 # AI-Personas paths (configured by install script)
 PERSONAS_PATH=$PERSONAS_PATH/experts
 SKILLS_PATH=$PERSONAS_PATH/skills
 DOMAINS_PATH=$PERSONAS_PATH/domains
 EOF
-    mv .env.tmp .env
-    echo -e "  ${GREEN}✓${NC} Updated .env with personas paths"
+    mv backend/.env.tmp backend/.env
+    echo -e "  ${GREEN}✓${NC} Updated backend/.env with personas paths"
     echo -e "  ${CYAN}→${NC} Personas path: $PERSONAS_PATH"
+fi
+
+# Also create a symlink in root for convenience (optional)
+if [ ! -f .env ] && [ -f backend/.env ]; then
+    ln -sf backend/.env .env 2>/dev/null || true
 fi
 
 echo ""
@@ -295,8 +301,8 @@ echo ""
 # Create data directory
 # =============================================================================
 
-mkdir -p data
-echo -e "${GREEN}✓${NC} Data directory ready"
+mkdir -p backend/data
+echo -e "${GREEN}✓${NC} Data directory ready (backend/data/)
 
 echo ""
 
