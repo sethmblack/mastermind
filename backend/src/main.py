@@ -12,6 +12,7 @@ from .db.database import init_db
 from .personas.loader import get_persona_loader
 from .api.routes import sessions, personas, analytics, config
 from .api.websocket import chat_handler
+from .workers.mcp_auto_responder import start_worker_async, stop_worker, is_worker_running
 
 # Configure logging
 logging.basicConfig(
@@ -37,10 +38,14 @@ async def lifespan(app: FastAPI):
     domains_count = len(loader.get_all_domains())
     logger.info(f"Loaded {personas_count} personas across {domains_count} domains")
 
+    # Start MCP auto-responder worker
+    await start_worker_async(check_interval=5)
+
     yield
 
     # Shutdown
     logger.info("Shutting down...")
+    stop_worker()
 
 
 # Create FastAPI app
@@ -99,6 +104,7 @@ async def health_check():
         "status": "healthy",
         "personas_loaded": len(loader.get_all_personas()),
         "domains_available": len(loader.get_all_domains()),
+        "mcp_auto_responder": "running" if is_worker_running() else "disabled",
     }
 
 

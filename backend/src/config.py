@@ -25,17 +25,17 @@ class Settings(BaseSettings):
 
     # Personas path - points to the AI-Personas repo
     personas_path: Path = Field(
-        default=Path("/Users/ziggs/Documents/AI-Personas/experts"),
+        default=Path("/Users/ziggs/Documents/InfiniteBackroom/Demo/AI-Personas/experts"),
         alias="PERSONAS_PATH"
     )
 
     skills_path: Path = Field(
-        default=Path("/Users/ziggs/Documents/AI-Personas/skills"),
+        default=Path("/Users/ziggs/Documents/InfiniteBackroom/Demo/AI-Personas/skills"),
         alias="SKILLS_PATH"
     )
 
     domains_path: Path = Field(
-        default=Path("/Users/ziggs/Documents/AI-Personas/domains"),
+        default=Path("/Users/ziggs/Documents/InfiniteBackroom/Demo/AI-Personas/domains"),
         alias="DOMAINS_PATH"
     )
 

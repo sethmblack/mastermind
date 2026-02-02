@@ -324,3 +324,108 @@ After successful doctor fix:
 
 Run ./start.sh to launch Mastermind
 ```
+
+---
+
+## Data & Database
+
+### Database Location
+
+Mastermind uses SQLite stored at:
+```
+backend/data/collab.db
+```
+
+This contains:
+- Sessions and configuration
+- All persona messages
+- Polls, options, and votes
+- Audit logs
+
+### Reset All Data
+
+To start fresh (delete all sessions, messages, polls):
+
+```bash
+cd <mastermind-directory>
+rm backend/data/collab.db
+# Restart backend - database recreated automatically
+./start.sh
+```
+
+### Backup Data
+
+```bash
+cp backend/data/collab.db backend/data/collab.db.backup.$(date +%Y%m%d)
+```
+
+---
+
+## Production Build
+
+### Frontend Production Build
+
+```bash
+cd frontend
+npm run build
+# Output in frontend/dist/
+```
+
+To serve the production build:
+```bash
+npm run preview
+# Or use any static file server for frontend/dist/
+```
+
+### Backend Production
+
+For production, use gunicorn with uvicorn workers:
+```bash
+cd backend
+source venv/bin/activate
+pip install gunicorn
+gunicorn src.main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
+```
+
+---
+
+## Environment Variables Reference
+
+Create a `.env` file in the `backend/` directory:
+
+```bash
+# === REQUIRED ===
+PERSONAS_PATH=/path/to/AI-Personas/experts
+SKILLS_PATH=/path/to/AI-Personas/skills
+DOMAINS_PATH=/path/to/AI-Personas/domains
+
+# === API KEYS (Optional - not needed if using MCP mode) ===
+ANTHROPIC_API_KEY=sk-ant-api03-...
+OPENAI_API_KEY=sk-...
+
+# === DATABASE ===
+DATABASE_URL=sqlite:///./data/collab.db
+
+# === SERVER CONFIG ===
+HOST=0.0.0.0
+PORT=8000
+DEBUG=false
+
+# === CORS (for production) ===
+CORS_ORIGINS=http://localhost:3000,https://yourdomain.com
+```
+
+### Environment Variable Descriptions
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `PERSONAS_PATH` | Yes | Path to AI-Personas/experts directory |
+| `SKILLS_PATH` | Yes | Path to AI-Personas/skills directory |
+| `DOMAINS_PATH` | Yes | Path to AI-Personas/domains directory |
+| `ANTHROPIC_API_KEY` | No* | Anthropic API key (*not needed if using MCP mode) |
+| `OPENAI_API_KEY` | No | OpenAI API key for GPT models |
+| `DATABASE_URL` | No | SQLite connection string (default: `sqlite:///./data/collab.db`) |
+| `HOST` | No | Server host (default: `0.0.0.0`) |
+| `PORT` | No | Server port (default: `8000`) |
+| `DEBUG` | No | Enable debug mode (default: `false`) |
+| `CORS_ORIGINS` | No | Allowed CORS origins (comma-separated) |

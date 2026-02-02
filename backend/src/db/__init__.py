@@ -10,6 +10,7 @@ from .models import (
     Vote,
     Insight,
     AuditLog,
+    PendingVoteRequest,
 )
 
 __all__ = [
@@ -25,4 +26,5 @@ __all__ = [
     "Vote",
     "Insight",
     "AuditLog",
+    "PendingVoteRequest",
 ]

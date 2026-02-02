@@ -29,6 +29,7 @@ const defaultConfig: SessionConfig = {
   web_search_enabled: false,
   code_execution_enabled: false,
   mcp_mode: false,
+  poll_mode: false,
   min_rounds: 3,
   max_rounds: 3,
 };

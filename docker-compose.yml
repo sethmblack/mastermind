@@ -8,7 +8,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./personas:/app/data/personas:ro
+      - ../AI-Personas:/app/data/personas:ro
       - ./data:/app/data
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
@@ -47,39 +47,6 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-
-  # Optional: Code execution sandbox
-  sandbox:
-    build:
-      context: ./sandbox
-      dockerfile: Dockerfile
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    read_only: true
-    tmpfs:
-      - /tmp:size=100M,mode=1777
-    networks:
-      - sandbox_net
-    deploy:
-      resources:
-        limits:
-          cpus: "1.0"
-          memory: 512M
-    restart: "no"
 
 volumes:
   ollama_data:
-
-networks:
-  sandbox_net:
-    driver: bridge
-    internal: true

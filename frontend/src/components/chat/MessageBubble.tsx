@@ -2,18 +2,34 @@ import { cn, formatRelativeTime, slugToTitle } from '@/lib/utils';
 import type { Message } from '@/types';
 import { User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { TypewriterText } from './TypewriterText';
 
 interface MessageBubbleProps {
   message: Message;
   color?: string;
   displayName?: string;
+  animate?: boolean;
+  onAnimationComplete?: () => void;
 }
 
-export function MessageBubble({ message, color, displayName }: MessageBubbleProps) {
+export function MessageBubble({ message, color, displayName, animate = false, onAnimationComplete }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
 
   if (isSystem) {
+    // Check if it's a vote message
+    const isVote = message.metadata?.type === 'vote_request' || message.metadata?.type === 'vote_complete';
+
+    if (isVote) {
+      return (
+        <div className="mx-auto max-w-lg my-4 p-4 rounded-lg bg-muted/50 border">
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="text-center text-xs text-muted-foreground py-2">
         {message.content}
@@ -72,9 +88,18 @@ export function MessageBubble({ message, color, displayName }: MessageBubbleProp
         )}
 
         {/* Message content */}
-        <div className="prose prose-sm dark:prose-invert max-w-none">
-          <ReactMarkdown>{message.content}</ReactMarkdown>
-        </div>
+        {animate && !isUser ? (
+          <TypewriterText
+            content={message.content}
+            speed={100}
+            onComplete={onAnimationComplete}
+            enabled={true}
+          />
+        ) : (
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          </div>
+        )}
       </div>
     </div>
   );

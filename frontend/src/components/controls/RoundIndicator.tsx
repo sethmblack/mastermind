@@ -53,7 +53,8 @@ export function RoundIndicator() {
   if (!currentSession) return null;
 
   const isComplete = currentRound > maxRounds;
-  const progress = isComplete ? 100 : ((currentRound - 1) / maxRounds) * 100;
+  // Map round 1 to 0%, final round to 100%
+  const progress = isComplete ? 100 : maxRounds <= 1 ? 100 : ((currentRound - 1) / (maxRounds - 1)) * 100;
 
   const getRoundLabel = (round: number) => {
     if (round === 1) return 'Initial';

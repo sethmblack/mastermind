@@ -1,15 +1,40 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { useStore } from '@/store';
 import { ConversationFlow } from './ConversationFlow';
 import { UserInputArea } from './UserInputArea';
 import { WelcomeScreen } from './WelcomeScreen';
 import { McpWaitingIndicator } from './McpWaitingIndicator';
 import { OrchestratorStatus } from './OrchestratorStatus';
+import { GenerationStatus } from './GenerationStatus';
+import { sessionsApi } from '@/lib/api';
+import { RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export function ChatArea() {
-  const { currentSession, messages, streamingMessages } = useStore();
+  const { currentSession, messages, streamingMessages, setMessages } = useStore();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Refresh messages from API
+  const refreshMessages = useCallback(async () => {
+    if (!currentSession) return;
+    // Don't refresh if actively streaming - WebSocket handles real-time updates
+    if (streamingMessages.size > 0) return;
+    setIsRefreshing(true);
+    try {
+      const msgs = await sessionsApi.getMessages(currentSession.id);
+      setMessages(msgs);
+    } catch (e) {
+      console.error('Failed to refresh messages:', e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [currentSession, setMessages, streamingMessages.size]);
+
+  // NOTE: Removed auto-refresh while thinking - it conflicts with WebSocket streaming
+  // The WebSocket already handles real-time message delivery via persona_chunk and persona_done events
+  // Auto-refresh was causing duplicate messages and "restart" behavior
 
   // Auto-scroll when new messages arrive
   useEffect(() => {
@@ -34,7 +59,19 @@ export function ChatArea() {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="p-4 border-b border-border bg-card/50">
-        <h2 className="font-semibold text-center">{currentSession.name}</h2>
+        <div className="flex items-center justify-between">
+          <div className="w-8" /> {/* Spacer for centering */}
+          <h2 className="font-semibold">{currentSession.name}</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={refreshMessages}
+            disabled={isRefreshing}
+            title="Refresh messages"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
         {currentSession.problem_statement && (
           <p className="text-sm text-muted-foreground text-center mt-1 max-w-2xl mx-auto">
             {currentSession.problem_statement}
@@ -44,6 +81,9 @@ export function ChatArea() {
 
       {/* Orchestrator Status (shows when Claude Code is processing) */}
       <OrchestratorStatus />
+
+      {/* Generation Status (shows when any persona is thinking/streaming) */}
+      <GenerationStatus />
 
       {/* Messages */}
       <div

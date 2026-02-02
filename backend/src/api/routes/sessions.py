@@ -42,13 +42,14 @@ class SessionConfig(BaseModel):
     web_search_enabled: bool = False
     code_execution_enabled: bool = False
     mcp_mode: bool = False  # Use Claude Code to power responses via MCP
+    poll_mode: bool = False  # Poll mode: up to 21 personas, voting-focused
 
 
 class CreateSessionRequest(BaseModel):
     """Request to create a new session."""
     name: str = Field(..., min_length=1, max_length=255)
     problem_statement: Optional[str] = None
-    personas: List[PersonaConfig] = Field(..., min_length=1, max_length=5)
+    personas: List[PersonaConfig] = Field(..., min_length=1, max_length=21)  # Up to 21 for poll mode
     turn_mode: TurnMode = TurnMode.ROUND_ROBIN
     config: SessionConfig = Field(default_factory=SessionConfig)
 
@@ -179,6 +180,20 @@ async def create_session(
         select(SessionPersona).where(SessionPersona.session_id == session.id)
     )
     personas = result.scalars().all()
+
+    # AUTO-TRIGGER: If problem_statement provided and NOT MCP mode, trigger orchestrator
+    # For MCP mode, Claude Code will poll /api/config/mcp/pending instead
+    if request.problem_statement and not request.config.mcp_mode:
+        import asyncio
+        from ...core.orchestrator import get_orchestrator
+        orchestrator = get_orchestrator(session.id)
+        # Run in background so we can return the response immediately
+        asyncio.create_task(
+            orchestrator.process_user_message(
+                content=request.problem_statement,
+                turn_number=1,
+            )
+        )
 
     return SessionResponse(
         id=session.id,

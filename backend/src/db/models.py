@@ -56,6 +56,14 @@ class VoteType(str, Enum):
     RANK = "rank"
 
 
+class PollPhase(str, Enum):
+    """Phases for multi-round poll mode."""
+    SYNTHESIS = "synthesis"      # Round 1: Frame question, suggest solutions
+    VOTE_ROUND_1 = "vote_round_1"  # First vote: Rank all options → narrow to top 5
+    VOTE_ROUND_2 = "vote_round_2"  # Final vote: Vote on 5 options → 3 result formats
+    COMPLETED = "completed"       # Poll finished
+
+
 class InsightType(str, Enum):
     """Types of insights extracted from conversation."""
     CONSENSUS = "consensus"
@@ -217,3 +225,75 @@ class AuditLog(Base):
 
     # Relationships
     session = relationship("Session", back_populates="audit_logs")
+
+
+class PendingVoteRequest(Base):
+    """Pending vote requests waiting for MCP/Claude Code responses."""
+    __tablename__ = "pending_vote_requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("sessions.id", ondelete="CASCADE"), nullable=False)
+    proposal = Column(Text, nullable=False)
+    proposal_id = Column(String(100), nullable=False)  # Unique ID for this vote request
+    status = Column(String(20), default="pending")  # pending, in_progress, completed
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    session = relationship("Session")
+
+
+class Poll(Base):
+    """A multi-phase poll for collecting and voting on options."""
+    __tablename__ = "polls"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("sessions.id", ondelete="CASCADE"), nullable=False)
+    poll_id = Column(String(100), nullable=False, unique=True)  # Unique identifier
+    question = Column(Text, nullable=False)  # Original question
+    framed_question = Column(Text, nullable=True)  # Synthesized/framed version
+    phase = Column(SQLEnum(PollPhase), default=PollPhase.SYNTHESIS)
+    parent_poll_id = Column(String(100), nullable=True)  # For sub-polls of complex questions
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    session = relationship("Session")
+    options = relationship("PollOption", back_populates="poll", cascade="all, delete-orphan")
+    votes = relationship("PollVote", back_populates="poll", cascade="all, delete-orphan")
+
+
+class PollOption(Base):
+    """An option proposed during poll synthesis phase."""
+    __tablename__ = "poll_options"
+
+    id = Column(Integer, primary_key=True, index=True)
+    poll_id = Column(Integer, ForeignKey("polls.id", ondelete="CASCADE"), nullable=False)
+    option_text = Column(Text, nullable=False)
+    proposed_by = Column(String(255), nullable=True)  # Persona who proposed it
+    is_active = Column(Boolean, default=True)  # False if eliminated in round 1
+    round_1_score = Column(Float, nullable=True)  # Score after first vote
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    poll = relationship("Poll", back_populates="options")
+
+
+class PollVote(Base):
+    """A vote on a poll option (supports ranked choice)."""
+    __tablename__ = "poll_votes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    poll_id = Column(Integer, ForeignKey("polls.id", ondelete="CASCADE"), nullable=False)
+    option_id = Column(Integer, ForeignKey("poll_options.id", ondelete="CASCADE"), nullable=False)
+    persona_name = Column(String(255), nullable=False)
+    vote_round = Column(Integer, nullable=False)  # 1 or 2
+    rank = Column(Integer, nullable=True)  # For ranked choice (1 = first choice)
+    vote_value = Column(String(20), nullable=True)  # agree/disagree/abstain for round 2
+    confidence = Column(Float, default=1.0)
+    reasoning = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    poll = relationship("Poll", back_populates="votes")
+    option = relationship("PollOption")

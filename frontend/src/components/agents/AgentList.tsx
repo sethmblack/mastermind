@@ -1,19 +1,21 @@
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { personasApi } from '@/lib/api';
 import { AgentCard } from './AgentCard';
 import { Loader2 } from 'lucide-react';
+import type { SortMode } from './AgentSearch';
 
 interface AgentListProps {
   searchQuery: string;
   selectedDomain: string | null;
+  sortMode?: SortMode;
 }
 
-export function AgentList({ searchQuery, selectedDomain }: AgentListProps) {
+export function AgentList({ searchQuery, selectedDomain, sortMode = 'alphabetical' }: AgentListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const { data: personas = [], isLoading } = useQuery({
+  const { data: rawPersonas = [], isLoading } = useQuery({
     queryKey: ['personas', { search: searchQuery, domain: selectedDomain }],
     queryFn: () =>
       personasApi.list({
@@ -23,6 +25,18 @@ export function AgentList({ searchQuery, selectedDomain }: AgentListProps) {
       }),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  // Sort personas based on selected sort mode
+  const personas = useMemo(() => {
+    return [...rawPersonas].sort((a, b) => {
+      if (sortMode === 'domain') {
+        const domainA = a.domain || 'zzz';
+        const domainB = b.domain || 'zzz';
+        if (domainA !== domainB) return domainA.localeCompare(domainB);
+      }
+      return a.display_name.localeCompare(b.display_name);
+    });
+  }, [rawPersonas, sortMode]);
 
   const rowVirtualizer = useVirtualizer({
     count: personas.length,

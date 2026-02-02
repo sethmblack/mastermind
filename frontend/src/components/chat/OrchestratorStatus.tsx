@@ -77,8 +77,9 @@ export function OrchestratorStatus() {
     return null;
   }
 
-  const config = statusMessage || STATUS_CONFIG.idle;
-  const IconComponent = config.icon;
+  if (!statusMessage) return null;
+
+  const IconComponent = statusMessage.icon;
   const isAnimating = ['checking', 'generating', 'submitting'].includes(orchestratorStatus.status);
 
   return (
@@ -88,11 +89,11 @@ export function OrchestratorStatus() {
       <IconComponent
         className={cn(
           'h-4 w-4',
-          config.color,
+          statusMessage.color,
           isAnimating && 'animate-spin'
         )}
       />
-      <span className={config.color}>{config.message}</span>
+      <span className={statusMessage.color}>{statusMessage.message}</span>
     </div>
   );
 }

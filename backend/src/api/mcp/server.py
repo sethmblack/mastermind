@@ -534,18 +534,8 @@ class MCPServer:
                 db.add(token_record)
                 await db.commit()
 
-            # Send "thinking" notification to trigger streaming UI
-            await send_persona_thinking(session_id, persona_name)
-            await asyncio.sleep(0.05)  # Small delay to ensure UI updates
-
-            # Stream the content in chunks for a nicer UI effect
-            chunk_size = 20  # Smaller chunks for smoother streaming
-            for i in range(0, len(content), chunk_size):
-                chunk = content[i:i + chunk_size]
-                await send_persona_chunk(session_id, persona_name, chunk)
-                await asyncio.sleep(0.02)  # 20ms delay between chunks for visible streaming
-
-            # Broadcast completion to WebSocket clients with estimated token usage
+            # Broadcast the completed message directly (no streaming)
+            # This avoids race conditions with multiple personas responding
             await send_persona_done(
                 session_id, persona_name, content,
                 estimated_input_tokens, estimated_output_tokens,

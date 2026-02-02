@@ -1,11 +1,9 @@
 import { useStore } from '@/store';
 import { MessageBubble } from './MessageBubble';
-import { StreamingMessage } from './StreamingMessage';
 import { TypingIndicator } from './TypingIndicator';
 
 export function ConversationFlow() {
-  const { messages, streamingMessages, thinkingPersonas, currentSession } =
-    useStore();
+  const { messages, thinkingPersonas, currentSession } = useStore();
 
   // Get persona colors map
   const personaColors: Record<string, string> = {};
@@ -28,15 +26,15 @@ export function ConversationFlow() {
                 )?.display_name || message.persona_name
               : undefined
           }
+          animate={false}
         />
       ))}
 
-      {/* Streaming messages */}
-      {Array.from(streamingMessages.entries()).map(([personaName, streaming]) => (
-        <StreamingMessage
+      {/* Thinking indicators - shown while waiting for response */}
+      {Array.from(thinkingPersonas).map((personaName) => (
+        <TypingIndicator
           key={personaName}
           personaName={personaName}
-          content={streaming.content}
           color={personaColors[personaName]}
           displayName={
             currentSession?.personas.find(
@@ -45,24 +43,6 @@ export function ConversationFlow() {
           }
         />
       ))}
-
-      {/* Thinking indicators */}
-      {Array.from(thinkingPersonas).map((personaName) => {
-        // Don't show thinking if already streaming
-        if (streamingMessages.has(personaName)) return null;
-        return (
-          <TypingIndicator
-            key={personaName}
-            personaName={personaName}
-            color={personaColors[personaName]}
-            displayName={
-              currentSession?.personas.find(
-                (p) => p.persona_name === personaName
-              )?.display_name || personaName
-            }
-          />
-        );
-      })}
     </div>
   );
 }

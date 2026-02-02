@@ -10,7 +10,7 @@ from sqlalchemy import select
 from ..db.database import AsyncSessionLocal
 from ..db.models import (
     Session, SessionPersona, Message, TokenUsage, AuditLog,
-    SessionPhase, SessionStatus, TurnMode,
+    SessionPhase, SessionStatus, TurnMode, Poll, PollPhase,
 )
 from ..personas.loader import get_persona_loader, Persona
 from ..personas.context_builder import ContextBuilder, ContextMessage
@@ -155,8 +155,17 @@ class Orchestrator:
 
             self.state = OrchestratorState.RUNNING
 
-            # Log start
+            # Update session status in database
             async with AsyncSessionLocal() as db:
+                result = await db.execute(
+                    select(Session).where(Session.id == self.session_id)
+                )
+                session = result.scalar_one_or_none()
+                if session:
+                    session.status = SessionStatus.ACTIVE
+                    await db.commit()
+
+                # Log start
                 audit = AuditLog(
                     session_id=self.session_id,
                     event_type="discussion_start",
@@ -166,17 +175,57 @@ class Orchestrator:
                 db.add(audit)
                 await db.commit()
 
+            # Broadcast status change
+            await ws_manager.broadcast(self.session_id, WSEvent(
+                type=WSEventType.SESSION_UPDATE,
+                data={"status": "active"},
+            ))
+
             logger.info(f"Discussion started for session {self.session_id}")
 
     async def pause(self):
         """Pause the discussion."""
         self.state = OrchestratorState.PAUSED
+
+        # Update session status in database
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(
+                select(Session).where(Session.id == self.session_id)
+            )
+            session = result.scalar_one_or_none()
+            if session:
+                session.status = SessionStatus.PAUSED
+                await db.commit()
+
+        # Broadcast status change
+        await ws_manager.broadcast(self.session_id, WSEvent(
+            type=WSEventType.SESSION_UPDATE,
+            data={"status": "paused"},
+        ))
+
         logger.info(f"Discussion paused for session {self.session_id}")
 
     async def resume(self):
         """Resume the discussion."""
         if self.state == OrchestratorState.PAUSED:
             self.state = OrchestratorState.RUNNING
+
+            # Update session status in database
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(
+                    select(Session).where(Session.id == self.session_id)
+                )
+                session = result.scalar_one_or_none()
+                if session:
+                    session.status = SessionStatus.ACTIVE
+                    await db.commit()
+
+            # Broadcast status change
+            await ws_manager.broadcast(self.session_id, WSEvent(
+                type=WSEventType.SESSION_UPDATE,
+                data={"status": "active"},
+            ))
+
             logger.info(f"Discussion resumed for session {self.session_id}")
 
     async def stop(self):
@@ -189,8 +238,14 @@ class Orchestrator:
             )
             session = result.scalar_one_or_none()
             if session:
-                session.status = SessionStatus.PAUSED
+                session.status = SessionStatus.COMPLETED
                 await db.commit()
+
+        # Broadcast status change
+        await ws_manager.broadcast(self.session_id, WSEvent(
+            type=WSEventType.SESSION_UPDATE,
+            data={"status": "completed"},
+        ))
 
         logger.info(f"Discussion stopped for session {self.session_id}")
 
@@ -202,6 +257,11 @@ class Orchestrator:
             await self.start_discussion()
 
         self.current_turn = turn_number
+
+        # Check if this is poll mode - if so, create a poll instead of regular responses
+        if self.config.get("poll_mode") and self._mcp_mode:
+            await self._start_poll_for_message(content)
+            return
 
         # Get conversation history
         history = await self._get_conversation_history()
@@ -224,6 +284,39 @@ class Orchestrator:
                 await self._generate_persona_response(speaker, history, turn_number)
                 # Update history after each response
                 history = await self._get_conversation_history()
+
+    async def _start_poll_for_message(self, question: str):
+        """Start a multi-phase poll for the given question."""
+        from ..db.models import Poll, PollPhase
+        import uuid
+
+        poll_id = str(uuid.uuid4())[:8]
+
+        async with AsyncSessionLocal() as db:
+            poll = Poll(
+                session_id=self.session_id,
+                poll_id=poll_id,
+                question=question,
+                phase=PollPhase.SYNTHESIS,
+            )
+            db.add(poll)
+            await db.commit()
+
+        # Broadcast poll started
+        await ws_manager.broadcast(self.session_id, WSEvent(
+            type=WSEventType.SYSTEM_MESSAGE,
+            data={
+                "type": "poll_started",
+                "poll_id": poll_id,
+                "question": question,
+                "phase": "synthesis",
+                "message": f"Poll started: {question[:100]}...\n\nWaiting for personas to propose solutions...",
+            },
+        ))
+
+        # Set state to awaiting MCP - Claude Code will poll and handle
+        self.state = OrchestratorState.AWAITING_MCP
+        logger.info(f"Poll {poll_id} started for session {self.session_id}")
 
     async def _generate_persona_response(
         self,
@@ -302,7 +395,7 @@ class Orchestrator:
                     content=full_content,
                     turn_number=turn_number,
                     phase=self.session.phase,
-                    metadata={
+                    extra_data={
                         "model": sp.model,
                         "provider": sp.provider,
                     },
@@ -422,16 +515,44 @@ class Orchestrator:
 
     async def request_vote(self, proposal: str):
         """Request a vote on a proposal from all personas."""
+        import uuid
+        from ..db.models import PendingVoteRequest
+
         await self.initialize()
 
         self.state = OrchestratorState.VOTING
+        proposal_id = str(uuid.uuid4())[:8]
 
+        # Broadcast vote request to UI
         await ws_manager.broadcast(self.session_id, WSEvent(
             type=WSEventType.VOTE_REQUEST,
-            data={"proposal": proposal},
+            data={
+                "proposal": proposal,
+                "proposal_id": proposal_id,
+                "personas": list(self.personas.keys()),
+            },
         ))
 
-        # Get votes from each persona
+        # Check if we're in MCP mode
+        if self._mcp_mode:
+            # Create a pending vote request for Claude Code to pick up
+            async with AsyncSessionLocal() as db:
+                pending_vote = PendingVoteRequest(
+                    session_id=self.session_id,
+                    proposal=proposal,
+                    proposal_id=proposal_id,
+                    status="pending",
+                )
+                db.add(pending_vote)
+                await db.commit()
+
+            # In MCP mode, votes are collected asynchronously
+            # The vote completion will be handled by the submit-vote endpoint
+            logger.info(f"Vote request created for MCP mode: {proposal_id}")
+            self.state = OrchestratorState.AWAITING_MCP
+            return
+
+        # Non-MCP mode: collect votes directly via API
         votes = await self.consensus_engine.collect_votes(
             proposal=proposal,
             personas=self.personas,

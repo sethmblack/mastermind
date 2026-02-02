@@ -7,7 +7,15 @@ import { Send, Square } from 'lucide-react';
 
 export function UserInputArea() {
   const [message, setMessage] = useState('');
-  const { thinkingPersonas } = useStore();
+  const { thinkingPersonas, currentSession } = useStore();
+  const [isConnected, setIsConnected] = useState(wsClient.isConnected);
+
+  // Track connection status
+  useEffect(() => {
+    const checkConnection = () => setIsConnected(wsClient.isConnected);
+    const interval = setInterval(checkConnection, 1000);
+    return () => clearInterval(interval);
+  }, []);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isThinking = thinkingPersonas.size > 0;
@@ -79,8 +87,8 @@ export function UserInputArea() {
 
         {/* Status bar */}
         <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-          <span>
-            {wsClient.isConnected ? (
+          <span className="flex items-center gap-2">
+            {isConnected ? (
               <span className="flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-green-500" />
                 Connected
@@ -90,6 +98,19 @@ export function UserInputArea() {
                 <span className="w-2 h-2 rounded-full bg-red-500" />
                 Disconnected
               </span>
+            )}
+            {currentSession && (
+              <>
+                <span className="text-muted-foreground/50">·</span>
+                <span>
+                  {currentSession.config?.mcp_mode
+                    ? 'Claude Code (MCP)'
+                    : currentSession.personas[0]?.provider || 'Unknown'
+                  }
+                </span>
+                <span className="text-muted-foreground/50">·</span>
+                <span>{currentSession.personas.length} personas</span>
+              </>
             )}
           </span>
           <span>{message.length} characters</span>

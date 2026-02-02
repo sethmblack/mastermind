@@ -4,13 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { statusLabels } from '@/lib/utils';
-import { Play, Pause, StopCircle } from 'lucide-react';
+import { Play, Pause, StopCircle, Check } from 'lucide-react';
 import { wsClient } from '@/lib/websocket';
 import { useState } from 'react';
 
 export function SessionControls() {
   const { currentSession, isDiscussionActive, setCurrentSession, setDiscussionActive } = useStore();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
   const [problemStatement, setProblemStatement] = useState(
     currentSession?.problem_statement || ''
   );
@@ -34,11 +36,20 @@ export function SessionControls() {
 
   const handleUpdateProblem = async () => {
     if (currentSession) {
-      const updated = await sessionsApi.update(currentSession.id, {
-        problem_statement: problemStatement,
-      });
-      setCurrentSession(updated);
-      setIsEditing(false);
+      setIsSaving(true);
+      try {
+        const updated = await sessionsApi.update(currentSession.id, {
+          problem_statement: problemStatement,
+        });
+        setCurrentSession(updated);
+        setIsEditing(false);
+        setShowSaved(true);
+        setTimeout(() => setShowSaved(false), 2000);
+      } catch (e) {
+        console.error('Failed to save problem statement:', e);
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -56,7 +67,14 @@ export function SessionControls() {
 
       {/* Problem Statement */}
       <div className="space-y-2">
-        <span className="text-sm text-muted-foreground">Problem Statement</span>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">Problem Statement</span>
+          {showSaved && (
+            <span className="text-xs text-green-500 flex items-center gap-1">
+              <Check className="h-3 w-3" /> Saved
+            </span>
+          )}
+        </div>
         {isEditing ? (
           <div className="space-y-2">
             <Textarea
@@ -66,8 +84,8 @@ export function SessionControls() {
               rows={3}
             />
             <div className="flex gap-2">
-              <Button size="sm" onClick={handleUpdateProblem}>
-                Save
+              <Button size="sm" onClick={handleUpdateProblem} disabled={isSaving}>
+                {isSaving ? 'Saving...' : 'Save'}
               </Button>
               <Button
                 size="sm"

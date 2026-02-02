@@ -63,6 +63,9 @@ class WSEventType(str, Enum):
     VOTE_RECEIVED = "vote_received"
     VOTE_COMPLETE = "vote_complete"
 
+    # System events
+    SYSTEM_MESSAGE = "system_message"
+
     # Metrics events
     TOKEN_UPDATE = "token_update"
     BUDGET_WARNING = "budget_warning"

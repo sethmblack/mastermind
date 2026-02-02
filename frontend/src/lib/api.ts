@@ -117,6 +117,13 @@ export const personasApi = {
       full_prompt: string;
       system_prompt: string;
     }>(`/personas/${encodeURIComponent(name)}/prompt`),
+
+  getSkillPrompt: (skillName: string) =>
+    fetchApi<{
+      skill_name: string;
+      display_name: string;
+      prompt: string;
+    }>(`/personas/skills/${encodeURIComponent(skillName)}/prompt`),
 };
 
 // Analytics API

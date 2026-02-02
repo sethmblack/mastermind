@@ -22,6 +22,7 @@ class PersonaSummary(BaseModel):
     display_name: str
     description: Optional[str] = None  # Brief description for tooltip
     domain: Optional[str] = None
+    domains: List[str] = []
     era: Optional[str] = None
     voice_preview: Optional[str] = None
 
@@ -34,6 +35,7 @@ class PersonaDetail(BaseModel):
     core_philosophy: Optional[str] = None
     methodology: Optional[str] = None
     domain: Optional[str] = None
+    domains: List[str] = []
     era: Optional[str] = None
     skills: List[PersonaSkillResponse] = []
     signature_quotes: List[str] = []
@@ -90,6 +92,7 @@ async def list_personas(
             display_name=p.display_name,
             description=get_description(p),
             domain=p.domain,
+            domains=p.domains,
             era=p.era,
             voice_preview=p.voice_profile[:200] if p.voice_profile else None,
         )
@@ -143,6 +146,7 @@ async def get_persona(persona_name: str):
         core_philosophy=persona.core_philosophy,
         methodology=persona.methodology,
         domain=persona.domain,
+        domains=persona.domains,
         era=persona.era,
         skills=[
             PersonaSkillResponse(
@@ -172,4 +176,32 @@ async def get_persona_prompt(persona_name: str):
         "display_name": persona.display_name,
         "full_prompt": persona.prompt,
         "system_prompt": persona.get_system_prompt(),
+    }
+
+
+@router.get("/skills/{skill_name}/prompt")
+async def get_skill_prompt(skill_name: str):
+    """Get the full prompt for a skill."""
+    from pathlib import Path
+    from ...config import settings
+
+    # Skills are in the shared skills directory
+    skills_path = Path(settings.skills_path) if hasattr(settings, 'skills_path') else Path("/app/data/personas/skills")
+    skill_dir = skills_path / skill_name
+    prompt_file = skill_dir / "PROMPT.md"
+
+    if not prompt_file.exists():
+        raise HTTPException(status_code=404, detail=f"Skill '{skill_name}' not found")
+
+    content = prompt_file.read_text(encoding="utf-8")
+
+    # Extract display name from first heading
+    import re
+    match = re.search(r"^#\s+(.+?)$", content, re.MULTILINE)
+    display_name = match.group(1).strip() if match else skill_name.replace("-", " ").title()
+
+    return {
+        "skill_name": skill_name,
+        "display_name": display_name,
+        "prompt": content,
     }

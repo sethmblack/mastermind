@@ -30,6 +30,7 @@ export interface SessionConfig {
   web_search_enabled: boolean;
   code_execution_enabled: boolean;
   mcp_mode: boolean;  // Use Claude Code to power responses
+  poll_mode: boolean;  // Multi-phase poll mode (up to 21 personas)
 }
 
 export interface Session {
@@ -143,7 +144,8 @@ export type WSEventType =
   | 'session_update'
   | 'set_mcp_mode'
   | 'mcp_status'
-  | 'orchestrator_status';
+  | 'orchestrator_status'
+  | 'system_message';
 
 export interface WSEvent {
   type: WSEventType;

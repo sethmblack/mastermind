@@ -64,9 +64,14 @@ export function LeftSidebar() {
 
               {/* Session Controls */}
               <section>
-                <h3 className="text-sm font-medium mb-3 text-muted-foreground">
-                  Session
-                </h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Session
+                  </h3>
+                  <span className="text-sm font-medium truncate max-w-[60%] text-right" title={currentSession.name}>
+                    {currentSession.name}
+                  </span>
+                </div>
                 <SessionControls />
               </section>
 
