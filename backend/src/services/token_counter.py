@@ -27,10 +27,6 @@ PRICING = {
         "o1-preview": {"input": 15.0, "output": 60.0},
         "o1-mini": {"input": 3.0, "output": 12.0},
     },
-    "ollama": {
-        # Local models are free
-        "default": {"input": 0.0, "output": 0.0},
-    },
 }
 
 

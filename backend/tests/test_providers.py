@@ -81,13 +81,6 @@ class TestProviderFactory:
             assert provider is not None
             assert provider.provider_name == "openai"
 
-    def test_get_ollama_provider(self):
-        """Test getting Ollama provider."""
-        factory._providers.clear()
-        provider = factory.get_provider("ollama")
-        assert provider is not None
-        assert provider.provider_name == "ollama"
-
     def test_get_unknown_provider(self):
         """Test getting unknown provider raises error."""
         with pytest.raises(ValueError):
@@ -95,10 +88,11 @@ class TestProviderFactory:
 
     def test_provider_caching(self):
         """Test that providers are cached."""
-        factory._providers.clear()
-        provider1 = factory.get_provider("ollama")
-        provider2 = factory.get_provider("ollama")
-        assert provider1 is provider2
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+            factory._providers.clear()
+            provider1 = factory.get_provider("anthropic")
+            provider2 = factory.get_provider("anthropic")
+            assert provider1 is provider2
 
     def test_get_all_models(self):
         """Test getting all models."""
@@ -415,52 +409,6 @@ class TestOpenAIProvider:
         assert chunks[1].stop_reason == "stop"
 
 
-class TestOllamaProvider:
-    """Tests for OllamaProvider."""
-
-    @pytest.fixture
-    def provider(self):
-        """Create Ollama provider."""
-        from src.providers.ollama import OllamaProvider
-        return OllamaProvider()
-
-    def test_provider_name(self, provider):
-        """Test provider name."""
-        assert provider.provider_name == "ollama"
-
-    def test_get_base_url(self, provider):
-        """Test getting base URL."""
-        assert "localhost" in provider.base_url or "11434" in provider.base_url
-
-    def test_is_available_false_when_not_running(self, provider):
-        """Test is_available when Ollama is not running."""
-        with patch("httpx.get", side_effect=Exception("Connection refused")):
-            assert provider.is_available() is False
-
-    def test_format_messages(self, provider):
-        """Test message formatting for Ollama."""
-        messages = [
-            ChatMessage(role="user", content="Hello"),
-            ChatMessage(role="assistant", content="Hi there!"),
-        ]
-        formatted = provider.format_messages(messages)
-        assert len(formatted) == 2
-        assert formatted[0]["role"] == "user"
-
-    def test_default_model(self, provider):
-        """Test default model."""
-        assert provider.default_model is not None
-
-    def test_available_models(self, provider):
-        """Test available models."""
-        assert provider.available_models is not None
-
-    def test_calculate_cost_free(self, provider):
-        """Test that Ollama is free."""
-        cost = provider.calculate_cost(10000, 5000)
-        assert cost == 0.0
-
-
 class TestBaseProvider:
     """Tests for BaseProvider methods."""
 
@@ -482,11 +430,12 @@ class TestBaseProvider:
 
     def test_format_messages_basic(self):
         """Test basic message formatting."""
-        factory._providers.clear()
-        provider = factory.get_provider("ollama")
-        messages = [
-            ChatMessage(role="user", content="Test"),
-        ]
-        formatted = provider.format_messages(messages)
-        assert formatted[0]["role"] == "user"
-        assert formatted[0]["content"] == "Test"
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test-key"}):
+            factory._providers.clear()
+            provider = factory.get_provider("anthropic")
+            messages = [
+                ChatMessage(role="user", content="Test"),
+            ]
+            formatted = provider.format_messages(messages)
+            assert formatted[0]["role"] == "user"
+            assert formatted[0]["content"] == "Test"

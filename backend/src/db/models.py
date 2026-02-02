@@ -108,7 +108,7 @@ class SessionPersona(Base):
     session_id = Column(Integer, ForeignKey("sessions.id", ondelete="CASCADE"), nullable=False)
     persona_name = Column(String(255), nullable=False)  # References the markdown persona
     display_name = Column(String(255), nullable=True)  # Custom display name
-    provider = Column(String(50), nullable=False)  # anthropic, openai, ollama
+    provider = Column(String(50), nullable=False)  # anthropic, openai
     model = Column(String(100), nullable=False)
     role = Column(String(50), default="participant")  # participant, moderator, devil_advocate, synthesizer
     color = Column(String(7), nullable=True)  # Hex color for UI

@@ -14,9 +14,6 @@ class Settings(BaseSettings):
     anthropic_api_key: Optional[str] = Field(default=None, alias="ANTHROPIC_API_KEY")
     openai_api_key: Optional[str] = Field(default=None, alias="OPENAI_API_KEY")
 
-    # Ollama settings
-    ollama_base_url: str = Field(default="http://localhost:11434", alias="OLLAMA_BASE_URL")
-
     # Database
     database_url: str = Field(
         default="sqlite+aiosqlite:///./data/collab.db",

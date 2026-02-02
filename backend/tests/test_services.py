@@ -79,17 +79,6 @@ class TestTokenCounter:
         assert isinstance(cost, float)
         assert cost > 0
 
-    def test_calculate_cost_ollama_free(self):
-        """Test cost calculation for Ollama (should be free)."""
-        counter = TokenCounter()
-        cost = counter.calculate_cost(
-            input_tokens=1000,
-            output_tokens=500,
-            provider="ollama",
-            model="llama3.1",
-        )
-        assert cost == 0.0
-
     def test_calculate_cost_zero_tokens(self):
         """Test cost calculation with zero tokens."""
         counter = TokenCounter()
@@ -178,7 +167,7 @@ class TestSessionUsageTracker:
     def test_check_budget_ok(self):
         """Test budget check when within budget."""
         tracker = SessionUsageTracker(session_id=1)
-        tracker.record_usage("p1", "ollama", "llama3.1", 1000, 500)  # Free
+        tracker.record_usage("p1", "anthropic", "claude-sonnet-4-20250514", 100, 50)
 
         budget_status = tracker.check_budget(budget=10.0)
         assert budget_status["status"] == "ok"
@@ -251,7 +240,6 @@ class TestRateLimiter:
         all_status = limiter.get_all_status()
         assert "anthropic" in all_status
         assert "openai" in all_status
-        assert "ollama" in all_status
 
     def test_record_rate_limit_error(self):
         """Test recording rate limit error."""

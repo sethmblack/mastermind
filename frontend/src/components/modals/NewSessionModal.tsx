@@ -38,7 +38,7 @@ interface EpistemicOptions {
   codeExecutionEnabled: boolean;
 }
 
-type Provider = 'claude-code' | 'ollama' | 'anthropic' | 'openai';
+type Provider = 'claude-code' | 'anthropic' | 'openai';
 
 interface ModelInfo {
   id: string;
@@ -54,13 +54,6 @@ const providerModels: Record<Provider, { label: string; models: ModelInfo[]; def
       { id: 'claude-opus-4-20250514', label: 'Claude Opus 4' },
       { id: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
       { id: 'claude-haiku-3-5-20241022', label: 'Claude Haiku 3.5' },
-    ],
-  },
-  ollama: {
-    label: 'Ollama (Local)',
-    defaultModel: 'llama3.2:3b',
-    models: [
-      { id: 'llama3.2:3b', label: 'Llama 3.2 3B' },
     ],
   },
   anthropic: {
@@ -686,7 +679,6 @@ export function NewSessionModal() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="claude-code">Claude Code (MCP)</SelectItem>
-                        <SelectItem value="ollama">Ollama (Local)</SelectItem>
                         <SelectItem value="anthropic">Anthropic API</SelectItem>
                         <SelectItem value="openai">OpenAI API</SelectItem>
                       </SelectContent>
@@ -753,7 +745,6 @@ export function NewSessionModal() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="claude-code" className="text-xs">MCP</SelectItem>
-                            <SelectItem value="ollama" className="text-xs">Ollama</SelectItem>
                             <SelectItem value="anthropic" className="text-xs">Anthropic</SelectItem>
                             <SelectItem value="openai" className="text-xs">OpenAI</SelectItem>
                           </SelectContent>

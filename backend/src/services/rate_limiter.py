@@ -32,7 +32,6 @@ class RateLimiter:
     DEFAULT_LIMITS = {
         "anthropic": {"requests": 50, "tokens": 100000},
         "openai": {"requests": 60, "tokens": 150000},
-        "ollama": {"requests": 100, "tokens": 1000000},  # Local, essentially unlimited
     }
 
     def __init__(

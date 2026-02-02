@@ -6,14 +6,12 @@ from typing import Optional
 from .base import BaseProvider
 from .anthropic import AnthropicProvider
 from .openai import OpenAIProvider
-from .ollama import OllamaProvider
 
 
 class ProviderType(str, Enum):
     """Supported provider types."""
     ANTHROPIC = "anthropic"
     OPENAI = "openai"
-    OLLAMA = "ollama"
 
 
 # Provider registry
@@ -44,8 +42,6 @@ def get_provider(provider_type: ProviderType | str) -> BaseProvider:
             _providers[provider_type] = AnthropicProvider()
         elif provider_type == ProviderType.OPENAI:
             _providers[provider_type] = OpenAIProvider()
-        elif provider_type == ProviderType.OLLAMA:
-            _providers[provider_type] = OllamaProvider()
         else:
             raise ValueError(f"Unknown provider type: {provider_type}")
 

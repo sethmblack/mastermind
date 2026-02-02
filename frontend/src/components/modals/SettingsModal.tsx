@@ -37,7 +37,6 @@ const defaultConfig: SessionConfig = {
 interface ProviderStatus {
   anthropic: boolean;
   openai: boolean;
-  ollama: boolean;
   mcp: boolean;
   mcpTools?: string[];
 }
@@ -65,13 +64,12 @@ export function SettingsModal() {
       setProviders({
         anthropic: providerData.available_providers?.includes('anthropic') ?? false,
         openai: providerData.available_providers?.includes('openai') ?? false,
-        ollama: providerData.available_providers?.includes('ollama') ?? false,
         mcp: mcpData.status === 'available',
         mcpTools: mcpData.tools,
       });
     } catch (e) {
       console.error('Failed to check providers:', e);
-      setProviders({ anthropic: false, openai: false, ollama: false, mcp: false });
+      setProviders({ anthropic: false, openai: false, mcp: false });
     }
     setLoadingProviders(false);
   };
@@ -208,25 +206,6 @@ export function SettingsModal() {
                     <Badge variant="secondary">
                       <XCircle className="h-3 w-3 mr-1" />
                       Not configured
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">Ollama (Local)</span>
-                  </div>
-                  {loadingProviders ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : providers?.ollama ? (
-                    <Badge variant="default" className="bg-green-600">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Running
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary">
-                      <XCircle className="h-3 w-3 mr-1" />
-                      Not running
                     </Badge>
                   )}
                 </div>

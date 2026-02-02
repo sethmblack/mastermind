@@ -38,7 +38,6 @@ class TestRateLimiter:
         assert limiter.window_seconds == 60
         assert "anthropic" in limiter.limits
         assert "openai" in limiter.limits
-        assert "ollama" in limiter.limits
 
     def test_create_with_custom_window(self):
         """Test creating with custom window."""
@@ -58,7 +57,6 @@ class TestRateLimiter:
         assert limiter.limits["anthropic"]["requests"] == 50
         assert limiter.limits["anthropic"]["tokens"] == 100000
         assert limiter.limits["openai"]["requests"] == 60
-        assert limiter.limits["ollama"]["requests"] == 100
 
     @pytest.mark.asyncio
     async def test_acquire_first_request(self):
@@ -176,7 +174,6 @@ class TestRateLimiter:
 
         assert "anthropic" in all_status
         assert "openai" in all_status
-        assert "ollama" in all_status
 
 
 class TestGlobalRateLimiter:

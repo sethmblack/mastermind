@@ -78,14 +78,6 @@ else
     echo -e "${YELLOW}⚠${NC} Frontend may still be starting..."
 fi
 
-# Check Ollama
-if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
-    MODELS=$(curl -s http://localhost:11434/api/tags | jq -r '.models | length')
-    echo -e "${GREEN}✓${NC} Ollama running with $MODELS models"
-else
-    echo -e "${YELLOW}⚠${NC} Ollama may still be starting..."
-fi
-
 echo ""
 
 # Start MCP Monitor
@@ -105,7 +97,6 @@ echo -e "${GREEN}╚════════════════════
 echo ""
 echo -e "  ${CYAN}Frontend:${NC}  http://localhost:3000"
 echo -e "  ${CYAN}Backend:${NC}   http://localhost:8000"
-echo -e "  ${CYAN}Ollama:${NC}    http://localhost:11434"
 echo -e "  ${CYAN}API Docs:${NC}  http://localhost:8000/docs"
 echo ""
 echo -e "  ${CYAN}MCP Mode:${NC}  When enabled, monitor alerts when personas need responses"
