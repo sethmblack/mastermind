@@ -1,7 +1,6 @@
 #!/bin/bash
-
-# Mastermind - Multi-Agent Collaboration Platform
-# Start Script - Launches backend and frontend servers
+# Mastermind - Docker Startup Script
+# Starts the application using Docker Compose with MCP monitoring
 
 set -e
 
@@ -18,58 +17,29 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║     Multi-Agent Collaboration Platform - Starting...       ║${NC}"
+echo -e "${BLUE}║   Multi-Agent Collaboration Platform - Docker Start        ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
-
-# Check if .env exists (in backend/ or root)
-if [ -f backend/.env ]; then
-    ENV_FILE="backend/.env"
-elif [ -f .env ]; then
-    ENV_FILE=".env"
-else
-    echo -e "${RED}Error: .env file not found${NC}"
-    echo "Please run ./install.sh first"
-    exit 1
-fi
-
-# Load environment variables
-export $(grep -v '^#' "$ENV_FILE" | xargs)
 
 # Function to cleanup on exit
 cleanup() {
     echo ""
-    echo -e "${YELLOW}Shutting down servers...${NC}"
-    if [ ! -z "$BACKEND_PID" ]; then
-        kill $BACKEND_PID 2>/dev/null || true
-    fi
-    if [ ! -z "$FRONTEND_PID" ]; then
-        kill $FRONTEND_PID 2>/dev/null || true
-    fi
-    if [ ! -z "$MCP_MONITOR_PID" ]; then
-        kill $MCP_MONITOR_PID 2>/dev/null || true
-    fi
-    # Kill any remaining processes
-    pkill -f "uvicorn src.main:app" 2>/dev/null || true
-    pkill -f "vite" 2>/dev/null || true
+    echo -e "${YELLOW}Shutting down...${NC}"
     pkill -f "mcp_monitor.sh" 2>/dev/null || true
-    echo -e "${GREEN}Servers stopped${NC}"
+    docker compose down 2>/dev/null || true
+    echo -e "${GREEN}Stopped${NC}"
     exit 0
 }
 
 trap cleanup SIGINT SIGTERM
 
-# Start Backend
-echo -e "${YELLOW}Starting backend server...${NC}"
-cd backend
-source venv/bin/activate
-uvicorn src.main:app --host 0.0.0.0 --port 8000 &
-BACKEND_PID=$!
-cd ..
+# Build and start containers
+echo -e "${YELLOW}Building and starting Docker containers...${NC}"
+docker compose up -d --build
 
-# Wait for backend to start
+# Wait for backend to be healthy
 echo -n "  Waiting for backend"
-for i in {1..30}; do
+for i in {1..60}; do
     if curl -s http://localhost:8000/health > /dev/null 2>&1; then
         break
     fi
@@ -81,27 +51,17 @@ echo ""
 # Verify backend started
 if curl -s http://localhost:8000/health > /dev/null 2>&1; then
     HEALTH=$(curl -s http://localhost:8000/health)
-    PERSONAS=$(echo $HEALTH | grep -o '"personas_loaded":[0-9]*' | cut -d':' -f2)
-    DOMAINS=$(echo $HEALTH | grep -o '"domains_available":[0-9]*' | cut -d':' -f2)
+    PERSONAS=$(echo $HEALTH | jq -r '.personas_loaded // "?"')
+    DOMAINS=$(echo $HEALTH | jq -r '.domains_available // "?"')
     echo -e "${GREEN}✓${NC} Backend running on http://localhost:8000"
     echo -e "  ${CYAN}$PERSONAS personas loaded across $DOMAINS domains${NC}"
 else
     echo -e "${RED}✗ Backend failed to start${NC}"
-    echo "  Check the logs above for errors"
-    cleanup
+    echo "  Run 'docker compose logs api' to see errors"
     exit 1
 fi
 
-echo ""
-
-# Start Frontend
-echo -e "${YELLOW}Starting frontend server...${NC}"
-cd frontend
-npm run dev &
-FRONTEND_PID=$!
-cd ..
-
-# Wait for frontend to start
+# Verify frontend
 echo -n "  Waiting for frontend"
 for i in {1..30}; do
     if curl -s http://localhost:3000 > /dev/null 2>&1; then
@@ -112,11 +72,18 @@ for i in {1..30}; do
 done
 echo ""
 
-# Verify frontend started
 if curl -s http://localhost:3000 > /dev/null 2>&1; then
     echo -e "${GREEN}✓${NC} Frontend running on http://localhost:3000"
 else
     echo -e "${YELLOW}⚠${NC} Frontend may still be starting..."
+fi
+
+# Check Ollama
+if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
+    MODELS=$(curl -s http://localhost:11434/api/tags | jq -r '.models | length')
+    echo -e "${GREEN}✓${NC} Ollama running with $MODELS models"
+else
+    echo -e "${YELLOW}⚠${NC} Ollama may still be starting..."
 fi
 
 echo ""
@@ -128,7 +95,7 @@ if [ -f "$SCRIPT_DIR/scripts/mcp_monitor.sh" ]; then
     MCP_MONITOR_PID=$!
     echo -e "${GREEN}✓${NC} MCP monitor running (checking for pending work every 10s)"
 else
-    echo -e "${YELLOW}⚠${NC} MCP monitor script not found, skipping..."
+    echo -e "${YELLOW}⚠${NC} MCP monitor script not found"
 fi
 
 echo ""
@@ -138,19 +105,14 @@ echo -e "${GREEN}╚════════════════════
 echo ""
 echo -e "  ${CYAN}Frontend:${NC}  http://localhost:3000"
 echo -e "  ${CYAN}Backend:${NC}   http://localhost:8000"
+echo -e "  ${CYAN}Ollama:${NC}    http://localhost:11434"
 echo -e "  ${CYAN}API Docs:${NC}  http://localhost:8000/docs"
 echo ""
 echo -e "  ${CYAN}MCP Mode:${NC}  When enabled, monitor alerts when personas need responses"
 echo ""
-echo -e "${YELLOW}Press Ctrl+C to stop all servers${NC}"
+echo -e "${YELLOW}Press Ctrl+C to stop${NC}"
+echo -e "${YELLOW}Run 'docker compose logs -f' in another terminal to see logs${NC}"
 echo ""
 
-# Open browser (optional - uncomment to enable)
-# if command -v open &> /dev/null; then
-#     open http://localhost:3000
-# elif command -v xdg-open &> /dev/null; then
-#     xdg-open http://localhost:3000
-# fi
-
-# Keep script running and wait for both processes
-wait $BACKEND_PID $FRONTEND_PID
+# Keep script running
+wait $MCP_MONITOR_PID 2>/dev/null || while true; do sleep 60; done
