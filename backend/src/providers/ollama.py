@@ -18,11 +18,6 @@ class OllamaProvider(BaseProvider):
     default_model = "llama3.2:3b"
     available_models = [
         "llama3.2:3b",
-        "llama3.2:1b",
-        "mistral:7b",
-        "gemma2:9b",
-        "qwen2.5:7b",
-        "phi3:14b",
     ]
 
     # Local models are free
