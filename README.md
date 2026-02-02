@@ -20,6 +20,16 @@ A multi-agent AI collaboration platform where up to 5 personas can discuss probl
 claude -p "Clone https://github.com/sethmblack/mastermind.git and https://github.com/sethmblack/AI-Personas.git to the current directory, then run ./install.sh --personas-path ../AI-Personas and ./start.sh"
 ```
 
+### Autonomous MCP Mode
+
+For Claude Code to run the MCP server autonomously (generating persona responses without permission prompts), start it with:
+
+```bash
+claude --dangerously-skip-permissions
+```
+
+This flag skips interactive permission prompts, allowing Claude Code to execute commands and process MCP work automatically.
+
 That's it. Claude Code will:
 1. Clone both repositories
 2. Install all dependencies
