@@ -10,11 +10,6 @@ A workshop-ready platform where up to 5 AI personas can collaborate on problems 
 - **Node.js 18+** (20+ recommended) - [Download](https://nodejs.org)
 - **npm** (comes with Node.js)
 
-### Optional (for advanced features)
-- **Docker Desktop** - [Download](https://docker.com/products/docker-desktop)
-  - Required for: Local Ollama models, code sandbox execution
-- **Ollama** - [Download](https://ollama.ai) (alternative to Docker for local models)
-
 ### API Keys (optional if using MCP)
 - [Anthropic API Key](https://console.anthropic.com/) - For Claude models
 - [OpenAI API Key](https://platform.openai.com/) - For GPT models
@@ -159,29 +154,19 @@ npm run dev
 
 ## Docker Setup (Optional)
 
-For running local models with Ollama or code sandbox:
-
-### Using Docker Compose
+For containerized deployment:
 
 ```bash
-# Start all services including Ollama
-docker-compose up -d
+# Build and start services
+docker compose up -d --build
 
-# Or just start Ollama for local models
-docker-compose up -d ollama
+# View logs
+docker compose logs -f
 ```
 
-### Pull a local model (after Ollama is running)
-
-```bash
-docker exec -it mastermind-ollama-1 ollama pull llama3.2:3b
-```
-
-### Configure .env for local models
-
-```bash
-OLLAMA_BASE_URL=http://localhost:11434
-```
+The Docker setup includes:
+- **api** - FastAPI backend on port 8000
+- **frontend** - React app served by nginx on port 3000
 
 ---
 
@@ -241,7 +226,6 @@ mastermind/
 |----------|----------|---------|-------------|
 | `ANTHROPIC_API_KEY` | No* | - | Anthropic API key for Claude |
 | `OPENAI_API_KEY` | No | - | OpenAI API key for GPT models |
-| `OLLAMA_BASE_URL` | No | `http://localhost:11434` | Ollama server URL |
 | `DATABASE_URL` | No | `sqlite:///./data/collab.db` | Database connection |
 | `HOST` | No | `0.0.0.0` | Backend host |
 | `PORT` | No | `8000` | Backend port |

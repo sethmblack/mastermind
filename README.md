@@ -8,7 +8,7 @@ A multi-agent AI collaboration platform where up to 5 personas can discuss probl
 
 - **265+ AI Personas** - Scientists, philosophers, business leaders, artists, and more
 - **Real-time Collaboration** - Watch personas debate, build consensus, and solve problems
-- **Multiple AI Providers** - Anthropic Claude, OpenAI GPT, or local Ollama models
+- **Multiple AI Providers** - Anthropic Claude or OpenAI GPT
 - **Rich Analytics** - Token usage, consensus tracking, conversation graphs
 - **Flexible Orchestration** - Round-robin, moderated, or free-form discussions
 
