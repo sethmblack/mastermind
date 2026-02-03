@@ -1061,12 +1061,30 @@ async def get_pending_mcp_responses():
                 )
                 session = session_result.scalar_one_or_none()
 
+                # Build conversation history from deliberation rounds
+                messages_result = await db.execute(
+                    select(Message)
+                    .where(Message.session_id == vote_req.session_id)
+                    .order_by(Message.turn_number, Message.round_number, Message.id)
+                )
+                all_messages = list(messages_result.scalars().all())
+
+                conversation_history = []
+                for msg in all_messages:
+                    conversation_history.append({
+                        "role": msg.role,
+                        "persona_name": msg.persona_name,
+                        "content": msg.content,
+                        "round_number": msg.round_number or 1,
+                    })
+
                 pending_votes.append({
                     "session_id": vote_req.session_id,
                     "session_name": session.name if session else "Unknown",
                     "proposal_id": vote_req.proposal_id,
                     "proposal": vote_req.proposal,
                     "pending_personas": pending_persona_votes,
+                    "conversation_history": conversation_history,
                     "votes_received": [
                         {
                             "persona_name": v.persona_name,
@@ -1076,10 +1094,10 @@ async def get_pending_mcp_responses():
                         for v in existing_votes
                     ],
                     "instructions": (
-                        "Vote on this proposal. Respond with:\n"
+                        "Vote on this proposal based on the deliberation above. Respond with:\n"
                         "VOTE: [AGREE/DISAGREE/ABSTAIN]\n"
                         "CONFIDENCE: [0.0-1.0]\n"
-                        "REASONING: [Your reasoning in 1-2 sentences]"
+                        "REASONING: [Your reasoning in 1-2 sentences, referencing the discussion]"
                     ),
                 })
         # Get all sessions with mcp_mode enabled
