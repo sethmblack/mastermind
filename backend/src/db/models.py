@@ -254,6 +254,7 @@ class Poll(Base):
     framed_question = Column(Text, nullable=True)  # Synthesized/framed version
     phase = Column(SQLEnum(PollPhase), default=PollPhase.SYNTHESIS)
     parent_poll_id = Column(String(100), nullable=True)  # For sub-polls of complex questions
+    synthesis_responses = Column(JSON, default=dict)  # {persona_name: {"framing": "...", "options": [...]}}
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     completed_at = Column(DateTime(timezone=True), nullable=True)
 

@@ -956,7 +956,7 @@ async def get_pending_mcp_responses():
                 options_result = await db.execute(
                     select(PollOption).where(PollOption.poll_id == poll.id)
                 )
-                options = [{"id": opt.id, "text": opt.option_text} for opt in options_result.scalars().all()]
+                options = [{"id": opt.id, "text": opt.option_text, "proposed_by": opt.proposed_by} for opt in options_result.scalars().all()]
 
                 # Get who has voted
                 votes_result = await db.execute(
@@ -977,9 +977,11 @@ async def get_pending_mcp_responses():
                         "pending_personas": pending,
                         "voted_personas": list(voted),
                         "options": options,
+                        "synthesis_responses": poll.synthesis_responses or {},
                         "instructions": (
-                            "POLL VOTE ROUND 1: Rank ALL options from most preferred (1) to least.\n\n"
-                            "This uses ranked choice voting to narrow to the top 5 options.\n\n"
+                            "POLL VOTE ROUND 1: Review the synthesis phase responses above, then rank ALL options.\n\n"
+                            "Each persona explained their framing and proposed options during synthesis.\n"
+                            "Use ranked choice voting to narrow to the top 5 options.\n\n"
                             "Format your response:\n"
                             "RANKINGS:\n"
                             "1. [option_id] - [brief reason]\n"
@@ -995,7 +997,7 @@ async def get_pending_mcp_responses():
                     .where(PollOption.poll_id == poll.id)
                     .where(PollOption.is_active == True)
                 )
-                options = [{"id": opt.id, "text": opt.option_text, "score": opt.round_1_score} for opt in options_result.scalars().all()]
+                options = [{"id": opt.id, "text": opt.option_text, "proposed_by": opt.proposed_by, "score": opt.round_1_score} for opt in options_result.scalars().all()]
 
                 # Get who has voted
                 votes_result = await db.execute(
@@ -1016,8 +1018,9 @@ async def get_pending_mcp_responses():
                         "pending_personas": pending,
                         "voted_personas": list(voted),
                         "top_5_options": options,
+                        "synthesis_responses": poll.synthesis_responses or {},
                         "instructions": (
-                            "POLL VOTE ROUND 2 (FINAL): Vote on each top-5 option.\n\n"
+                            "POLL VOTE ROUND 2 (FINAL): Review the synthesis responses and vote on each top-5 option.\n\n"
                             "For EACH option, indicate:\n"
                             "- VOTE: AGREE / DISAGREE / ABSTAIN\n"
                             "- CONFIDENCE: 0.0 to 1.0\n"
@@ -1570,6 +1573,14 @@ async def submit_poll_synthesis(request: SubmitSynthesisRequest):
                 proposed_by=request.persona_name,
             )
             db.add(option)
+
+        # Store the synthesis response with framing
+        synthesis_responses = poll.synthesis_responses or {}
+        synthesis_responses[request.persona_name] = {
+            "framing": request.framing,
+            "options": request.proposed_options,
+        }
+        poll.synthesis_responses = synthesis_responses
 
         await db.commit()
 
