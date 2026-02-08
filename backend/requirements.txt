@@ -6,7 +6,7 @@ websockets>=14.0
 
 # Database
 sqlalchemy>=2.0.36
-aiosqlite>=0.20.0
+asyncpg>=0.29.0
 
 # AI Providers
 anthropic>=0.42.0
@@ -31,3 +31,4 @@ slowapi>=0.1.9
 # Testing
 pytest>=8.3.0
 pytest-asyncio>=0.25.0
+aiosqlite>=0.20.0

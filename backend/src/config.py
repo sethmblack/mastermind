@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str = Field(
-        default="sqlite+aiosqlite:///./data/collab.db",
+        default="postgresql+asyncpg://mastermind:mastermind@db:5432/mastermind",
         alias="DATABASE_URL"
     )
 
